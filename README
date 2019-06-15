@@ -17,6 +17,8 @@ TODO:
 
 See 'example.mim' for an example config file
 
+To scan for devices use `$ aseqdump -l`
+To scan a device's inputs use `$ aseqdump -p <client name>`
 
 -- COMMAND FORMAT --
 
@@ -44,7 +46,7 @@ name=<name>
 commands=[<command>,<command>]
 }
 -
-*name: string referring to client name of the device ($ aseqdump -l)
+*name: string referring to client name of the device
 
 - command format (global):
 {
