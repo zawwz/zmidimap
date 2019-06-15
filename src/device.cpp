@@ -61,7 +61,7 @@ bool Device::import_chunk(Chunk const& ch)
       id=stoi(tch["id"].strval());
 
       //channel
-      if(tch["channel"].strval()=="*")
+      if(tch.subChunkPtr("channel") == nullptr || tch["channel"].strval()=="*")
         channel=-1;
       else
         channel=stoi(tch["channel"].strval());
