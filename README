@@ -104,8 +104,8 @@ remap=<x:y>
 float=<true/false>
 }
 -
-*range: controller value from -8192 to 8192 that triggers command. Can enter an interval x:y or single value
-  > optional, default -8192:8192
+*range: controller value from -8192 to 8191 that triggers command. Can enter an interval x:y or single value
+  > optional, default -8192:8191
 *remap: remaps the range to given interval. Interval can be inversed and float
   > optional, default same as range
 *float: boolean value defining if output is a floating point value

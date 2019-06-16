@@ -96,7 +96,6 @@ bool Device::import_chunk(Chunk const& ch)
             high=stoi(tt.substr(tpos, tt.size()-tpos));
           }
         }
-        printf("%d:%d\n",low,high);
         this->noteCommands[id].push_back(NoteCommand(id,channel,low,high,shell));
         this->nb_command++;
       }
@@ -143,6 +142,11 @@ bool Device::import_chunk(Chunk const& ch)
           tpos++;
           mapMax=stof(map.substr(tpos, map.size()-tpos));
         }
+        else
+        {
+          mapMin=min;
+          mapMax=max;
+        }
 
         //floating
         ttch=tch.subChunkPtr("float");
@@ -152,11 +156,6 @@ bool Device::import_chunk(Chunk const& ch)
           if( tfl == "true" || tfl == "yes" || tfl == "y")
             floating=true;
         }
-        else
-        {
-          mapMin=min;
-          mapMax=max;
-        }
 
         this->ctrlCommands[id].push_back(ControllerCommand(id,channel,min,max,mapMin,mapMax,floating,shell));
         this->nb_command++;
@@ -164,7 +163,7 @@ bool Device::import_chunk(Chunk const& ch)
       else if(tstr == "pitch") //type pitch bend
       {
         int16_t min=-8192;
-        int16_t max=8192;
+        int16_t max=8191;
         float mapMin;
         float mapMax;
         bool floating=false;
@@ -208,11 +207,6 @@ bool Device::import_chunk(Chunk const& ch)
           std::string tfl=ttch->strval();
           if( tfl == "true" || tfl == "yes" || tfl == "y")
             floating=true;
-        }
-        else
-        {
-          mapMin=min;
-          mapMax=max;
         }
 
         this->pitchCommands.push_back(PitchCommand(channel,min,max,mapMin,mapMax,floating,shell));
