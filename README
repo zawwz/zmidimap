@@ -27,14 +27,21 @@ Format is a regular shell format
 -- Environment
 - Global
 $channel: channel of the
-$id: id of the note/controller
+
+
 
 - Note
+$id: id of the note
 $velocity: velocity of the note
 
 - Controller
+$id: id of the controller
 $value: value of the controller (remapped)
 $rawvalue: original value of the controller
+
+- Pitch bend
+$value: value of the bend (remapped)
+$rawvalue: original value of the bend
 
 
 -- FILE FORMAT --
@@ -48,39 +55,55 @@ commands=[<command>,<command>]
 -
 *name: string referring to client name of the device
 
-- command format (global):
+- <command> format (global):
 {
-type=<note/controller>
-id=<x>
+type=<note/controller/pitch>
 shell=<shell command>
 channel=<*/x>
 }
 -
-*id: value from 0 to 127 referring to id of note/controller
-  > mandatory
 *shell: shell command to be executed
   > mandatory
 *channel: value from 0 to 16 for channel. Can use * for any channel
   > optional, default *
 
-
 - <command> format (note)
 {
+id=<x>
 trigger=<x:y/x>
 }
 -
+*id: value from 0 to 127 referring to id of note/controller
+  > mandatory
 *trigger: note velocity from 0 to 127 that triggers the command. Can enter an interval x:y or single value
   > optional, default 1:127
 
-- <command> format (note)
+- <command> format (controller)
+{
+id=<x>
+range=<x:y>
+remap=<x:y>
+float=<true/false>
+}
+-
+*id: value from 0 to 127 referring to id of note/controller
+  > mandatory
+*range: controller value from 0 to 127 that triggers command. Can enter an interval x:y or single value
+  > optional, default 0:127
+*remap: remaps the range to given interval. Interval can be inversed and float
+  > optional, default same as range
+*float: boolean value defining if output is a floating point value
+  > optional, default false
+
+- <command> format (pitch)
 {
 range=<x:y>
 remap=<x:y>
 float=<true/false>
 }
 -
-*range: controller value from 0 to 127 that triggers command. Can enter an interval x:y or single value
-  > optional, default 0:127
+*range: controller value from -8192 to 8192 that triggers command. Can enter an interval x:y or single value
+  > optional, default -8192:8192
 *remap: remaps the range to given interval. Interval can be inversed and float
   > optional, default same as range
 *float: boolean value defining if output is a floating point value

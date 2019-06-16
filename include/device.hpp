@@ -16,6 +16,7 @@ public:
   virtual ~Device();
 
   bool start_loop();
+  void run_signal(char* buff);
 
   bool import_chunk(Chunk const& ch);
   Chunk export_chunk();
@@ -26,7 +27,8 @@ public:
   uint32_t nb_command;
   std::vector<NoteCommand> noteCommands[128];
   std::vector<ControllerCommand> ctrlCommands[128];
-  // std::vector<Command> systCommands;
+  std::vector<PitchCommand> pitchCommands;
+  // std::vector<Command> sysCommands;
 
   std::thread thread;
 private:
