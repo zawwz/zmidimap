@@ -4,15 +4,11 @@
   name=Launch Control
   commands=[
     {
-      type=note
-      id=9
-      shell=echo "Note $id on  ch$channel v$velocity"
-    },
-    {
-      type=note
-      id=9
-      trigger=0
-      shell=echo "Note $id off ch$channel"
+      //=KNOB HA
+      //=displays value 0:127 for knobs 21-28
+      type=controller
+      id=21:28
+      shell=echo "Knob #$id ch$channel:$value"
     },
     {
       //=KNOB L1
@@ -58,7 +54,19 @@
 ,
 {
   name=Launchpad S
-  commands=[]
+  commands=[
+    {
+      type=note
+      id=*
+      shell=echo "Note $id on  velocity:$velocity"
+    },
+    {
+      type=note
+      id=*
+      trigger=0
+      shell=echo "Note $id off"
+    }
+  ]
 }
 
 ]

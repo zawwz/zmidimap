@@ -39,6 +39,70 @@ bool Device::start_loop()
   return true;
 }
 
+std::pair<int32_t,int32_t> importRange(Chunk const& ch, std::string const& tag, int32_t low, int32_t high)
+{
+  Chunk* pch=ch.subChunkPtr(tag);
+  if(pch != nullptr)
+  {
+    std::string str=pch->strval();
+    auto tpos=str.find(':');
+    if (str=="*") //whole range
+    {
+      return std::make_pair(low,high);
+    }
+    else if(tpos == std::string::npos) //single value
+    {
+      low=stoi(str);
+      high=low;
+    }
+    else //range
+    {
+      low=stoi(str.substr(0,tpos));
+      tpos++;
+      high=stoi(str.substr(tpos, str.size()-tpos));
+    }
+  }
+  return std::make_pair(low, high);
+}
+
+std::pair<float,float> importRangeFloat(Chunk const& ch, std::string const& tag, float low, float high)
+{
+  Chunk* pch=ch.subChunkPtr(tag);
+  if(pch != nullptr)
+  {
+    std::string str=pch->strval();
+    auto tpos=str.find(':');
+    if(tpos == std::string::npos)
+    {
+      //single value
+      low=stof(str);
+      high=low;
+    }
+    else
+    {
+      //range
+      low=stof(str.substr(0,tpos));
+      tpos++;
+      high=stof(str.substr(tpos, str.size()-tpos));
+    }
+  }
+  return std::make_pair(low, high);
+}
+
+bool importBool(Chunk const& ch, std::string const& tag, bool defbool)
+{
+  Chunk* pch=ch.subChunkPtr(tag);
+  if(pch != nullptr)
+  {
+    std::string str=pch->strval();
+    if( str == "true" )
+      return true;
+    else if( str == "false" )
+      return false;
+  }
+  return defbool;
+}
+
 bool Device::import_chunk(Chunk const& ch)
 {
   Chunk& cch = ch["commands"];
@@ -56,6 +120,9 @@ bool Device::import_chunk(Chunk const& ch)
       int8_t channel;
       std::string shell;
 
+      std::pair<int32_t,int32_t> intpair;
+      std::pair<float,float> floatpair;
+
       //channel
       if(tch.subChunkPtr("channel") == nullptr || tch["channel"].strval()=="*")
         channel=-1;
@@ -68,40 +135,33 @@ bool Device::import_chunk(Chunk const& ch)
       //type
       if(tstr == "note") //type note
       {
-        uint8_t id;
+        uint8_t id_low=0;
+        uint8_t id_high=127;
         uint8_t low=1;
         uint8_t high=127;
         std::string tt;
 
         //id
-        id=stoi(tch["id"].strval());
+        intpair=importRange(tch, "id", id_low, id_high);
+        id_low=intpair.first;
+        id_high=intpair.second;
+        // id=stoi(tch["id"].strval());
 
         //trigger
-        Chunk* ttch=tch.subChunkPtr("trigger");
-        if(ttch != nullptr)
+        intpair = importRange(tch, "trigger", low, high);
+        low=intpair.first;
+        high=intpair.second;
+
+        for( uint8_t i=id_low ; i <= id_high ; i++ )
         {
-          tt=ttch->strval();
-          auto tpos=tt.find(':');
-          if(tpos == std::string::npos)
-          {
-            //single value
-            low=stoi(tt);
-            high=low;
-          }
-          else
-          {
-            //range
-            low=stoi(tt.substr(0,tpos));
-            tpos++;
-            high=stoi(tt.substr(tpos, tt.size()-tpos));
-          }
+          this->noteCommands[i].push_back(NoteCommand(i,channel,low,high,shell));
         }
-        this->noteCommands[id].push_back(NoteCommand(id,channel,low,high,shell));
         this->nb_command++;
       }
       else if(tstr == "controller") //type controller
       {
-        uint8_t id;
+        uint8_t id_low=0;
+        uint8_t id_high=127;
         uint8_t min=0;
         uint8_t max=127;
         float mapMin;
@@ -109,55 +169,27 @@ bool Device::import_chunk(Chunk const& ch)
         bool floating=false;
 
         //id
-        id=stoi(tch["id"].strval());
+        intpair=importRange(tch, "id", id_low, id_high);
+        id_low=intpair.first;
+        id_high=intpair.second;
 
         //range
-        Chunk* ttch=tch.subChunkPtr("range");
-        if(ttch != nullptr)
-        {
-          std::string range=ttch->strval();
-          auto tpos=range.find(':');
-          if(tpos == std::string::npos)
-          {
-            //single value
-            min=stoi(range);
-            max=min;
-          }
-          else
-          {
-            //range
-            min=stoi(range.substr(0,tpos));
-            tpos++;
-            max=stoi(range.substr(tpos, range.size()-tpos));
-          }
-        }
+        intpair = importRange(tch, "range", min, max);
+        min=intpair.first;
+        max=intpair.second;
 
         //remap
-        ttch=tch.subChunkPtr("remap");
-        if(ttch != nullptr)
-        {
-          std::string map=ttch->strval();
-          auto tpos=map.find(':');
-          mapMin=stof(map.substr(0,tpos));
-          tpos++;
-          mapMax=stof(map.substr(tpos, map.size()-tpos));
-        }
-        else
-        {
-          mapMin=min;
-          mapMax=max;
-        }
+        floatpair = importRangeFloat(tch, "remap", min, max);
+        mapMin=floatpair.first;
+        mapMax=floatpair.second;
 
         //floating
-        ttch=tch.subChunkPtr("float");
-        if(ttch != nullptr)
-        {
-          std::string tfl=ttch->strval();
-          if( tfl == "true" || tfl == "yes" || tfl == "y")
-            floating=true;
-        }
+        floating = importBool(tch, "float", floating);
 
-        this->ctrlCommands[id].push_back(ControllerCommand(id,channel,min,max,mapMin,mapMax,floating,shell));
+        for( uint8_t i=id_low ; i <= id_high ; i++ )
+        {
+          this->ctrlCommands[i].push_back(ControllerCommand(i,channel,min,max,mapMin,mapMax,floating,shell));
+        }
         this->nb_command++;
       }
       else if(tstr == "pitch") //type pitch bend
@@ -169,45 +201,17 @@ bool Device::import_chunk(Chunk const& ch)
         bool floating=false;
 
         //range
-        Chunk* ttch=tch.subChunkPtr("range");
-        if(ttch != nullptr)
-        {
-          std::string range=ttch->strval();
-          auto tpos=range.find(':');
-          if(tpos == std::string::npos)
-          {
-            //single value
-            min=stoi(range);
-            max=min;
-          }
-          else
-          {
-            //range
-            min=stoi(range.substr(0,tpos));
-            tpos++;
-            max=stoi(range.substr(tpos, range.size()-tpos));
-          }
-        }
+        intpair = importRange(tch, "range", min, max);
+        min=intpair.first;
+        max=intpair.second;
 
         //remap
-        ttch=tch.subChunkPtr("remap");
-        if(ttch != nullptr)
-        {
-          std::string map=ttch->strval();
-          auto tpos=map.find(':');
-          mapMin=stof(map.substr(0,tpos));
-          tpos++;
-          mapMax=stof(map.substr(tpos, map.size()-tpos));
-        }
+        floatpair = importRangeFloat(tch, "remap", min, max);
+        mapMin=floatpair.first;
+        mapMax=floatpair.second;
 
         //floating
-        ttch=tch.subChunkPtr("float");
-        if(ttch != nullptr)
-        {
-          std::string tfl=ttch->strval();
-          if( tfl == "true" || tfl == "yes" || tfl == "y")
-            floating=true;
-        }
+        floating = importBool(tch, "float", floating);
 
         this->pitchCommands.push_back(PitchCommand(channel,min,max,mapMin,mapMax,floating,shell));
         this->nb_command++;
@@ -261,7 +265,7 @@ void Device::run_signal(char* buff)
         type='p';
       else
       {
-        throw std::runtime_error("Unknown MIDI signal\n");
+        throw std::runtime_error("Unknown MIDI signal:\n" + std::string(buff));
         return;
       }
 
@@ -273,7 +277,7 @@ void Device::run_signal(char* buff)
       channel = std::stoi( std::string(pos-t, t) );
       pos+=2;
 
-      //ctid read (only note anc controller)
+      //ctid read (only note and controller)
       if(type=='n' || type=='c')
       {
         while (*(pos) != ' ')
@@ -300,13 +304,16 @@ void Device::run_signal(char* buff)
       else
         value=0;
 
+      //processing
       if (type == 'n')
       {
-        for( auto it : this->noteCommands[ctid])
+        for( auto it : this->noteCommands[ctid] )
         {
-          if((it.channel == -1 || it.channel == channel) && it.low <= value && it.high >= value)
+          if( (it.channel == -1 || it.channel == channel) && it.low <= value && it.high >= value )
           {
-            std::string command="id=" + std::to_string(ctid)  + ";channel=" + std::to_string(channel) + ";velocity=" + std::to_string(value) + ";";
+            std::string command="id=" + std::to_string(ctid)
+            + ";channel=" + std::to_string(channel)
+            + ";velocity=" + std::to_string(value) + ";";
             command += it.shell;
             std::thread(sh, command).detach();
           }
@@ -314,19 +321,22 @@ void Device::run_signal(char* buff)
       }
       else if(type == 'c')
       {
-        for( auto it : this->ctrlCommands[ctid])
+        for( auto it : this->ctrlCommands[ctid] )
         {
-          if((it.channel == -1 || it.channel == channel) && it.min <=  value && it.max >= value)
+          if( (it.channel == -1 || it.channel == channel) && it.min <=  value && it.max >= value )
           {
             //remapping of value
             float result;
-            if(it.min == it.max)
+            if(it.min == it.max) //zero case
               result = it.mapMin;
             else
               result=(value-it.min)*(it.mapMax-it.mapMin)/(it.max-it.min)+it.mapMin;
 
             //command execution
-            std::string command="id=" + std::to_string(ctid)  + ";channel=" + std::to_string(channel) + ";rawvalue=" + std::to_string(value) + ";value=";
+            std::string command="id=" + std::to_string(ctid)
+            + ";channel=" + std::to_string(channel)
+            + ";rawvalue=" + std::to_string(value)
+            + ";value=";
             if(it.floating)
               command += std::to_string(result);
             else
@@ -338,19 +348,21 @@ void Device::run_signal(char* buff)
       }
       else if(type == 'p')
       {
-        for( auto it : this->pitchCommands)
+        for( auto it : this->pitchCommands )
         {
-          if((it.channel == -1 || it.channel == channel) && it.min <= value && it.max >= value)
+          if( (it.channel == -1 || it.channel == channel) && it.min <= value && it.max >= value )
           {
             //remapping of value
             float result;
-            if(it.min == it.max)
+            if(it.min == it.max) //zero case
               result = it.mapMin;
             else
               result=(value-it.min)*(it.mapMax-it.mapMin)/(it.max-it.min)+it.mapMin;
 
             //command execution
-            std::string command="id=" + std::to_string(ctid)  + ";channel=" + std::to_string(channel) + ";rawvalue=" + std::to_string(value) + ";value=";
+            std::string command=";channel=" + std::to_string(channel)
+            + ";rawvalue=" + std::to_string(value)
+            + ";value=";
             if(it.floating)
               command += std::to_string(result);
             else
@@ -362,6 +374,7 @@ void Device::run_signal(char* buff)
       } // if type
 
     } //if system exclusive
+
   } //while
 
 }

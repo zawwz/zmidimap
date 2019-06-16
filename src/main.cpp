@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         Device *newDevice = new Device;
         newDevice->import_chunk(file.chunk()[i]);
         device_list.push_back(newDevice);
-        printf("Added device '%s' with %d commands\n", newDevice->name.c_str(), newDevice->nb_command);
+        printf("Loaded %d commands for device '%s'\n", newDevice->nb_command, newDevice->name.c_str());
       }
     }
     else

@@ -49,17 +49,17 @@ $rawvalue: original value of the bend
 
 - <device> format:
 {
-name=<name>
-commands=[<command>,<command>]
+  name=<name>
+  commands=[<command>,<command>]
 }
 -
 *name: string referring to client name of the device
 
 - <command> format (global):
 {
-type=<note/controller/pitch>
-shell=<shell command>
-channel=<*/x>
+  type=<note/controller/pitch>
+  shell=<shell command>
+  channel=<*/x>
 }
 -
 *type: type of the signal: note/controller/pitch
@@ -71,25 +71,25 @@ channel=<*/x>
 
 - <command> format (note)
 {
-id=<x>
-trigger=<x:y/x>
+  id=<x/x:y/*>
+  trigger=<x/x:y/*>
 }
 -
 *id: value from 0 to 127 referring to id of note/controller
-  > mandatory
+  > optional, default 0:127
 *trigger: note velocity from 0 to 127 that triggers the command. Can enter an interval x:y or single value
   > optional, default 1:127
 
 - <command> format (controller)
 {
-id=<x>
-range=<x:y>
-remap=<x:y>
-float=<true/false>
+  id=<x/x:y/*>
+  range=<x/x:y/*>
+  remap=<x/x:y/*>
+  float=<true/false>
 }
 -
 *id: value from 0 to 127 referring to id of note/controller
-  > mandatory
+  > optional, default 0:127
 *range: controller value from 0 to 127 that triggers command. Can enter an interval x:y or single value
   > optional, default 0:127
 *remap: remaps the range to given interval. Interval can be inversed and float
@@ -99,9 +99,9 @@ float=<true/false>
 
 - <command> format (pitch)
 {
-range=<x:y>
-remap=<x:y>
-float=<true/false>
+  range=<x/x:y/*>
+  remap=<x/x:y/*>
+  float=<true/false>
 }
 -
 *range: controller value from -8192 to 8191 that triggers command. Can enter an interval x:y or single value
@@ -110,5 +110,10 @@ float=<true/false>
   > optional, default same as range
 *float: boolean value defining if output is a floating point value
   > optional, default false
+
+- Format:
+x:y   range from x to y
+x     single value x
+*     all possible values
 
 - Comments can be written inside {} by doing //=<COMMENT>
