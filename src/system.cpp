@@ -10,7 +10,7 @@
 #include <vector>
 
 #define ANNOUNCE_COMMAND "aseqdump -p System:1"
-#define LIST_COMMAND "aseqdump -l | tail -n +2 | tr -s ' ' | cut -d' ' -f3-"
+#define LIST_COMMAND "aseqdump -l | tail -n +2 | cut -c10- | tr -s ' '"
 
 void device_check()
 {
