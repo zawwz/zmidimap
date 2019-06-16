@@ -62,6 +62,8 @@ shell=<shell command>
 channel=<*/x>
 }
 -
+*type: type of the signal: note/controller/pitch
+  > mandatory
 *shell: shell command to be executed
   > mandatory
 *channel: value from 0 to 16 for channel. Can use * for any channel
