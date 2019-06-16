@@ -5,6 +5,8 @@ BINDIR=bin
 
 NAME = zmidimap
 
+LDFLAGS = -lpthread
+
 CC=g++
 CXXFLAGS= -I$(IDIR) -Wall -pedantic -std=c++17
 ifeq	 ($(RELEASE),true)
@@ -13,7 +15,8 @@ else
 	CXXFLAGS += -g
 endif
 
-LDFLAGS = -lpthread
+$(shell mkdir -p $(ODIR))
+$(shell mkdir -p $(BINDIR))
 
 # automatically finds .hpp
 DEPS = $(shell if [ -n "$(ld $(IDIR))" ] ; then ls $(IDIR)/*.hpp ; fi)
