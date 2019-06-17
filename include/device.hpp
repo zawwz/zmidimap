@@ -28,7 +28,7 @@ public:
   std::vector<NoteCommand> noteCommands[128];
   std::vector<ControllerCommand> ctrlCommands[128];
   std::vector<PitchCommand> pitchCommands;
-  // std::vector<Command> sysCommands;
+  std::vector<SystemCommand> sysCommands;
 
   std::thread thread;
 private:

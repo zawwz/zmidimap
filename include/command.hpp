@@ -9,7 +9,7 @@ class NoteCommand
 {
 public:
 
-  NoteCommand(int8_t ch, uint8_t l, uint8_t h, std::string sh);
+  NoteCommand(int8_t ch, uint8_t l, uint8_t h, std::string const& sh);
 
   int8_t channel;
   uint8_t low;
@@ -21,7 +21,7 @@ class ControllerCommand
 {
 public:
 
-  ControllerCommand(int8_t ch, uint8_t l, uint8_t h, float ml, float mm, bool fl, std::string sh);
+  ControllerCommand(int8_t ch, uint8_t l, uint8_t h, float ml, float mm, bool fl, std::string const& sh);
 
   int8_t channel;
   uint8_t min;
@@ -36,7 +36,7 @@ class PitchCommand
 {
 public:
 
-  PitchCommand(uint8_t ch, int16_t l, int16_t h, float ml, float mh, bool fl, std::string sh);
+  PitchCommand(uint8_t ch, int16_t l, int16_t h, float ml, float mh, bool fl, std::string const& sh);
 
   int8_t channel;
   int16_t min;
@@ -47,5 +47,13 @@ public:
   std::string shell;
 };
 
+class SystemCommand
+{
+public:
+
+  SystemCommand(std::string const& sh);
+
+  std::string shell;
+};
 
 #endif //COMMAND_HPP

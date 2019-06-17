@@ -113,7 +113,9 @@ bool Device::import_chunk(Chunk const& ch)
     std::string tstr=tch["type"].strval();
     if(tstr == "system") //type system
     {
-      throw std::runtime_error("System commands not implemented yet");
+      std::string shell;
+      shell=tch["shell"].strval();
+      this->sysCommands.push_back(SystemCommand(shell));
     }
     else
     {
@@ -237,10 +239,23 @@ void Device::run_signal(char* buff)
 
   else if (index(buff, ':') != NULL) // MIDI command
   {
-    if (strstr(buff, "System exclusive") != NULL)
+    if (strstr(buff, "System exclusive") != NULL) //system exclusive
     {
-      printf("%s", buff);
-      //do stuff
+      char* val=buff+35;
+      std::string strval;
+      while(*val != '\n')
+      {
+        if(*val != ' ')
+          strval += *val;
+        val++;
+      }
+
+      for( auto it : this->sysCommands )
+      {
+        std::string command="code=" + strval + ";";
+        command += it.shell;
+        std::thread(sh, command).detach();
+      }
     }
     else
     {
