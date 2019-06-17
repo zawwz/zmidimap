@@ -154,7 +154,7 @@ bool Device::import_chunk(Chunk const& ch)
 
         for( uint8_t i=id_low ; i <= id_high ; i++ )
         {
-          this->noteCommands[i].push_back(NoteCommand(i,channel,low,high,shell));
+          this->noteCommands[i].push_back(NoteCommand(channel,low,high,shell));
         }
         this->nb_command++;
       }
@@ -188,7 +188,7 @@ bool Device::import_chunk(Chunk const& ch)
 
         for( uint8_t i=id_low ; i <= id_high ; i++ )
         {
-          this->ctrlCommands[i].push_back(ControllerCommand(i,channel,min,max,mapMin,mapMax,floating,shell));
+          this->ctrlCommands[i].push_back(ControllerCommand(channel,min,max,mapMin,mapMax,floating,shell));
         }
         this->nb_command++;
       }

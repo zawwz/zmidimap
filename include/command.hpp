@@ -9,9 +9,8 @@ class NoteCommand
 {
 public:
 
-  NoteCommand(uint8_t i, int8_t ch, uint8_t l, uint8_t h, std::string sh);
+  NoteCommand(int8_t ch, uint8_t l, uint8_t h, std::string sh);
 
-  uint8_t id;
   int8_t channel;
   uint8_t low;
   uint8_t high;
@@ -22,9 +21,8 @@ class ControllerCommand
 {
 public:
 
-  ControllerCommand(uint8_t i, int8_t ch, uint8_t l, uint8_t h, float ml, float mm, bool fl, std::string sh);
+  ControllerCommand(int8_t ch, uint8_t l, uint8_t h, float ml, float mm, bool fl, std::string sh);
 
-  uint8_t id;
   int8_t channel;
   uint8_t min;
   uint8_t max;
