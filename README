@@ -20,7 +20,7 @@ See 'example.mim' for an example config file
 To scan for devices use `$ aseqdump -l`
 To scan a device's inputs use `$ aseqdump -p <client name>`
 
--- COMMAND FORMAT --
+-- [COMMAND FORMAT] --
 
 Format is a regular shell format
 
@@ -45,7 +45,8 @@ $rawvalue: original value of the bend
 $code: hexadecimal code of the system signal
 
 
--- FILE FORMAT --
+-- [FILE FORMAT] --
+
 [<device>,<device>]
 
 - <device> format:
@@ -56,24 +57,30 @@ $code: hexadecimal code of the system signal
 -
 *name: string referring to client name of the device
 
-- <command> format (global):
+--<command> format (global):
 {
+  <tag>=<value>
+  <tag>=<value>
+  ...
+}
+
+
+-- COMMAND TAGS
+
+[Global tags]
   type=<note/controller/pitch/system>
   shell=<shell command>
-}
--
+--
 *type: type of the signal: note/controller/pitch
   > mandatory
 *shell: shell command to be executed
   > mandatory
 
-- <command> format (note)
-{
+[Note tags]
   id=<x/x:y/*>
   channel=<*/x>
   trigger=<x/x:y/*>
-}
--
+--
 *id: value from 0 to 127 referring to id of note/controller
   > optional, default 0:127
 *channel: value from 0 to 16 for channel. Can use * for any channel
@@ -81,15 +88,13 @@ $code: hexadecimal code of the system signal
 *trigger: note velocity from 0 to 127 that triggers the command. Can enter an interval x:y or single value
   > optional, default 1:127
 
-- <command> format (controller)
-{
+[Controller tags]
   id=<x/x:y/*>
   channel=<*/x>
   range=<x/x:y/*>
   remap=<x/x:y/*>
   float=<true/false>
-}
--
+--
 *id: value from 0 to 127 referring to id of note/controller
   > optional, default 0:127
 *channel: value from 0 to 16 for channel. Can use * for any channel
@@ -101,13 +106,11 @@ $code: hexadecimal code of the system signal
 *float: boolean value defining if output is a floating point value
   > optional, default false
 
-- <command> format (pitch)
-{
+[Pitch tags]
   range=<x/x:y/*>
   remap=<x/x:y/*>
   float=<true/false>
-}
--
+--
 *range: controller value from -8192 to 8191 that triggers command. Can enter an interval x:y or single value
   > optional, default -8192:8191
 *remap: remaps the range to given interval. Interval can be inversed and float
@@ -115,9 +118,10 @@ $code: hexadecimal code of the system signal
 *float: boolean value defining if output is a floating point value
   > optional, default false
 
-- Format:
+--Number Format
 x:y   range from x to y
 x     single value x
 *     all possible values
 
-- Comments can be written inside {} by doing //=<COMMENT>
+
+Comments can be written inside {} by doing //=<COMMENT>
