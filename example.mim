@@ -1,26 +1,29 @@
 [
 
+// LAUNCH  CONTROL
 {
   name=Launch Control
   commands=[
+    // KNOBS HIGH
     {
-      //=KNOB HA
-      //=displays value 0:127 for knobs 21-28
+      //KNOB HA
+      //displays value 0:127 for knobs 21-28
       type=controller
       id=21:28
       shell=echo "Knob #$id ch$channel:$value"
     },
+    // KNOBS LOW
     {
-      //=KNOB L1
-      //=displays value 0:127 for knob 41 from any channel
+      //KNOB L1
+      //displays value 0:127 for knob 41 from any channel
       type=controller
       id=41
       channel=*
       shell=echo "Knob #$id ch$channel:$value"
     },
     {
-      //=KNOB L2
-      //=displays value -100:100 for knob 42 on channel 0
+      //KNOB L2
+      //displays value -100:100 for knob 42 on channel 0
       type=controller
       id=42
       channel=0
@@ -28,8 +31,8 @@
       shell=echo "Knob #$id ch$channel:$value r:$rawvalue"
     },
     {
-      //=KNOB L3 H1
-      //=displays value 0:1:0 for knob 42 on channel 1 (first half)
+      //KNOB L3 H1
+      //displays value 0:1:0 for knob 42 on channel 1 (first half)
       type=controller
       id=42
       channel=1
@@ -39,8 +42,8 @@
       shell=echo "Knob #$id ch$channel:$value"
     },
     {
-      //=KNOB L3 H2
-      //=displays value 0:1:0 for knob 42 on channel 1 (second half)
+      //KNOB L3 H2
+      //displays value 0:1:0 for knob 42 on channel 1 (second half)
       type=controller
       id=42
       channel=1
@@ -52,15 +55,18 @@
   ]
 }
 ,
+// LAUNCHPAD
 {
   name=Launchpad S
   commands=[
     {
+      // ANY NOTE ON
       type=note
       id=*
       shell=echo "Note $id on  velocity:$velocity"
     },
     {
+      // ANY NOTE OFF
       type=note
       id=*
       trigger=0

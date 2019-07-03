@@ -124,4 +124,5 @@ x     single value x
 *     all possible values
 
 
-Comments can be written inside {} by doing //=<COMMENT>
+Comments can be done with //
+  note: // in value lines will not be ignored

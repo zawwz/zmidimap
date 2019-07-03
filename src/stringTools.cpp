@@ -399,7 +399,7 @@ std::pair<std::string,std::string> readValue(std::string const& in, unsigned int
   unsigned int i=0,j=0,reading=0;
   while(i<in.size())
   {
-    while(!isRead(in[i])) /*Lire jusqu'à un caractère lu (ingorer les espaces etc...)*/
+    while(!isRead(in[i])) //read till read char
       i++;
     if(i>=in.size())
     {
@@ -407,17 +407,26 @@ std::pair<std::string,std::string> readValue(std::string const& in, unsigned int
         *rank=-1;
       return std::make_pair("","");
     }
-    while(in[i]!='=' && in[i]!=':') //lire le nom
+    if(i+1 < in.size() && in[i]=='/' && in[i+1]=='/') //ignore // comment
+    {
+      i+=2;
+      while(i<in.size() && in[i] !='\n' )
+        i++;
+      i++;
+      while(!isRead(in[i]))
+        i++;
+    }
+    while(in[i]!='=' && in[i]!=':') //read name
     {
       name += in[i];
       i++;
     }
     i++;
-    if(occurence==reading) /*Si c'est l'occurence que l'on veut*/
+    if(occurence==reading) //this is the correct occurence
     {
       unsigned int counter=0;
       j=i;
-      if(in[i]=='{') /*Valeur encapsulée*/
+      if(in[i]=='{') //encapsulated
       {
         i++;
         while(i<in.size() && !(in[i]=='}' && counter==0))
@@ -441,7 +450,7 @@ std::pair<std::string,std::string> readValue(std::string const& in, unsigned int
           *rank=i;
         return std::make_pair(name, in.substr(j,i-j));
       }
-      else if(in[i]=='[') /*Valeur encapsulée*/
+      else if(in[i]=='[') //encapsulated
       {
         i++;
         while(i<in.size() && !(in[i]==']' && counter==0))
@@ -555,9 +564,17 @@ std::vector<std::string> readList(std::string const& in)
             j=i;
             while(i<in.size() && !(in[i]==',' && counter==0) && !(in[i]==']' && counter==0) )
             {
+                if(i+1 < in.size() && in[i]=='/' && in [i+1]=='/') //ignore // comments
+                {
+                  i+=2;
+                  while(i<in.size() && in[i] !='\n' )
+                    i++;
+                  i++;
+                  j=i;
+                }
                 if(in[i]=='\\')
                     i++;
-                else if(in[i]=='{')
+                else if(in[i]=='{') // start of chunk
                 {
                     i++;
                     unsigned int counter2=0;
@@ -572,7 +589,7 @@ std::vector<std::string> readList(std::string const& in)
                         i++;
                     }
                 }
-                else if(in[i]=='\"')
+                else if(in[i]=='\"') //quote value
                 {
                     i++;
                     while(in[i]!='\"')
