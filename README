@@ -1,19 +1,16 @@
 
 Maps midi signals coming from ALSA midi devices to shell commands
 
-Build: $ make && sudo make install
+Build: `$ make && sudo make install`
 
 usage: midiMap <config file>
 This is a daemon program, it does not start any background process by itself and needs to be constantly running for the mapping to be active
 
 This program is in early stage but is fully functional without any major errors
 
-TODO:
-- Use integrated C MIDI control
-- Support for multiple identical devices
-- Support for system reserved commands
-- Options
-- Better error handling on wrong config file format
+Known issues:
+- Doesn't support multiple identical devices
+- Error reporting on wrong config is sub-par
 
 
 See 'example.mim' for an example config file
@@ -78,48 +75,48 @@ $code: hexadecimal code of the system signal
   > mandatory
 
 [Note tags]
-  id=<x/x:y/*>
-  channel=<*/x>
-  trigger=<x/x:y/*>
+  id=<interval>
+  channel=<x/*>
+  trigger=<interval>
 --
-*id: value from 0 to 127 referring to id of note/controller
+*id: note id from 0 to 127
   > optional, default 0:127
-*channel: value from 0 to 16 for channel. Can use * for any channel
+*channel: value from 0 to 16 for channel, * for any channel
   > optional, default *
-*trigger: note velocity from 0 to 127 that triggers the command. Can enter an interval x:y or single value
+*trigger: note velocity from 0 to 127 that triggers the command
   > optional, default 1:127
 
 [Controller tags]
-  id=<x/x:y/*>
-  channel=<*/x>
-  range=<x/x:y/*>
-  remap=<x/x:y/*>
+  id=<interval>
+  channel=<x/*>
+  range=<interval>
+  remap=<interval>
   float=<true/false>
 --
-*id: value from 0 to 127 referring to id of note/controller
+*id: controller id from 0 to 127
   > optional, default 0:127
-*channel: value from 0 to 16 for channel. Can use * for any channel
+*channel: value from 0 to 16 for channel, * for any channel
   > optional, default *
-*range: controller value from 0 to 127 that triggers command. Can enter an interval x:y or single value
+*range: controller value from 0 to 127 that triggers command
   > optional, default 0:127
-*remap: remaps the range to given interval. Interval can be inversed and float
+*remap: remaps the range to given interval
   > optional, default same as range
 *float: boolean value defining if output is a floating point value
   > optional, default false
 
-[Pitch tags]
-  range=<x/x:y/*>
-  remap=<x/x:y/*>
+[Pitch bend tags]
+  range=<interval>
+  remap=<interval>
   float=<true/false>
 --
-*range: controller value from -8192 to 8191 that triggers command. Can enter an interval x:y or single value
+*range: controller value from -8192 to 8191 that triggers command
   > optional, default -8192:8191
-*remap: remaps the range to given interval. Interval can be inversed and float
+*remap: remaps the range to given interval
   > optional, default same as range
 *float: boolean value defining if output is a floating point value
   > optional, default false
 
---Number Format
+--Interval Format
 x:y   range from x to y
 x     single value x
 *     all possible values
@@ -129,4 +126,4 @@ Comments can be done with //
   note: // in value lines will not be ignored
 
 A shell command can be written on multiple lines by containing it between '' right after =
-  note: additional ' in command need to be escaped with \
+  note: additional ' in the command need to be escaped with \
