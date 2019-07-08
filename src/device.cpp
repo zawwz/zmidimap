@@ -292,7 +292,8 @@ void Device::run_signal(char* buff)
         type='p';
       else
       {
-        throw std::runtime_error("Unknown MIDI signal:\n" + std::string(buff));
+        // throw std::runtime_error("Unknown MIDI signal:\n" + std::string(buff));
+        printf("Unsupported signal, ignoring\n");
         return;
       }
 
