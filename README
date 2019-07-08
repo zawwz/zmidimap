@@ -127,3 +127,6 @@ x     single value x
 
 Comments can be done with //
   note: // in value lines will not be ignored
+
+A shell command can be written on multiple lines by containing it between '' right after =
+  note: additional ' in command need to be escaped with \

@@ -492,6 +492,22 @@ std::pair<std::string,std::string> readValue(std::string const& in, unsigned int
         ret += '\"';
         return std::make_pair(name, ret);
       }
+      else if(in[i]=='\'')
+      {
+        i++;
+        j++;
+        while(i<in.size() && in[i]!='\'')
+        {
+          if(in[i]=='\\')
+            i++;
+          i++;
+        }
+        if(rank!=nullptr)
+          *rank=i+1;
+        std::string ret;
+        ret += in.substr(j,i-j);
+        return std::make_pair(name, ret);
+      }
       else /*Valeur non encapsulée: jusqu'à \n*/
       {
         i++;
