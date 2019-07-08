@@ -47,6 +47,22 @@ public:
   std::string shell;
 };
 
+class ConnectCommand
+{
+public:
+  ConnectCommand(std::string const& sh);
+
+  std::string shell;
+};
+
+class DisconnectCommand
+{
+public:
+  DisconnectCommand(std::string const& sh);
+
+  std::string shell;
+};
+
 class SystemCommand
 {
 public:

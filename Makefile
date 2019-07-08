@@ -1,7 +1,7 @@
 IDIR=include
 SRCDIR=src
 ODIR=obj
-BINDIR=bin
+BINDIR=.
 
 NAME = zmidimap
 
@@ -9,9 +9,7 @@ LDFLAGS = -lpthread
 
 CC=g++
 CXXFLAGS= -I$(IDIR) -Wall -pedantic -std=c++17
-ifeq	 ($(RELEASE),true)
-	BINDIR=.
-else
+ifeq ($(DEBUG),true)
 	CXXFLAGS += -g
 endif
 
@@ -37,3 +35,6 @@ clean:
 
 clear:
 	rm $(BINDIR)/$(NAME)
+
+install:
+	mv $(BINDIR)/$(NAME) /usr/bin

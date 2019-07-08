@@ -30,6 +30,16 @@ PitchCommand::PitchCommand(uint8_t ch, int16_t l, int16_t h, float ml, float mh,
   this->shell=sh;
 }
 
+ConnectCommand::ConnectCommand(std::string const& sh)
+{
+  this->shell=sh;
+}
+
+DisconnectCommand::DisconnectCommand(std::string const& sh)
+{
+  this->shell=sh;
+}
+
 SystemCommand::SystemCommand(std::string const& sh)
 {
   this->shell=sh;

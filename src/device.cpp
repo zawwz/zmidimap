@@ -117,6 +117,18 @@ bool Device::import_chunk(Chunk const& ch)
       shell=tch["shell"].strval();
       this->sysCommands.push_back(SystemCommand(shell));
     }
+    else if (tstr == "connect")
+    {
+      std::string shell;
+      shell=tch["shell"].strval();
+      this->connectCommands.push_back(ConnectCommand(shell));
+    }
+    else if (tstr == "disconnect")
+    {
+      std::string shell;
+      shell=tch["shell"].strval();
+      this->disconnectCommands.push_back(DisconnectCommand(shell));
+    }
     else
     {
       int8_t channel;
@@ -401,9 +413,19 @@ void Device::loop(Device* dev)
   char* buff = NULL;
   size_t buff_size = 0;
 
+  for( auto it : dev->connectCommands )
+  {
+    std::thread(sh, it.shell).detach();
+  }
+
   while (getline(&buff, &buff_size, stream) > 0)
   {
     dev->run_signal(buff);
+  }
+
+  for( auto it : dev->disconnectCommands )
+  {
+    std::thread(sh, it.shell).detach();
   }
 
   printf("Device '%s' disconnected\n", dev->name.c_str());

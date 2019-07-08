@@ -22,26 +22,26 @@ To scan a device's inputs use `$ aseqdump -p <client name>`
 
 -- [COMMAND FORMAT] --
 
-Format is a regular shell format
+Format is regular shell format
 
 -- Environment
 
-- Note
+[Note]
 $id: id of the note
 $channel: channel of the note
 $velocity: velocity of the note
 
-- Controller
+[Controller]
 $value: value of the controller (remapped)
 $id: id of the controller
 $channel: channel of the controller
 $rawvalue: original value of the controller
 
-- Pitch
+[Pitch]
 $value: value of the bend (remapped)
 $rawvalue: original value of the bend
 
-- System
+[System]
 $code: hexadecimal code of the system signal
 
 
@@ -68,10 +68,10 @@ $code: hexadecimal code of the system signal
 -- COMMAND TAGS
 
 [Global tags]
-  type=<note/controller/pitch/system>
+  type=<note/controller/pitch/system/connect/disconnect>
   shell=<shell command>
 --
-*type: type of the signal: note/controller/pitch
+*type: type of the signal: note/controller/pitch/system/connect/disconnect
   > mandatory
 *shell: shell command to be executed
   > mandatory

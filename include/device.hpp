@@ -29,6 +29,8 @@ public:
   std::vector<ControllerCommand> ctrlCommands[128];
   std::vector<PitchCommand> pitchCommands;
   std::vector<SystemCommand> sysCommands;
+  std::vector<ConnectCommand> connectCommands;
+  std::vector<DisconnectCommand> disconnectCommands;
 
   std::thread thread;
 private:
