@@ -1,6 +1,7 @@
 
 Maps midi signals coming from ALSA midi devices to shell commands
-For a release build: `$ make clean ; make -B RELEASE=true`
+
+Build: $ make && sudo make install
 
 usage: midiMap <config file>
 This is a daemon program, it does not start any background process by itself and needs to be constantly running for the mapping to be active
