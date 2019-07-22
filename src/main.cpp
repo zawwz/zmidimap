@@ -7,6 +7,8 @@
 #include "Filedat.hpp"
 #include "options.hpp"
 
+#include <cstring>
+
 int main(int argc, char* argv[])
 {
 
@@ -39,25 +41,16 @@ int main(int argc, char* argv[])
   }
 
   printf("Loading config file '%s'\n", arg[0].c_str());
-  bool import_ok;
   try
   {
-    import_ok = file.importFile();
+    file.importFile();
 
-    if(import_ok)
+    for(int i=0 ; i<file.chunk().listSize() ; i++)
     {
-      for(int i=0 ; i<file.chunk().listSize() ; i++)
-      {
-        Device *newDevice = new Device;
-        newDevice->import_chunk(file.chunk()[i]);
-        device_list.push_back(newDevice);
-        printf("Loaded %d commands for device '%s'\n", newDevice->nb_command, newDevice->name.c_str());
-      }
-    }
-    else
-    {
-      fprintf(stderr, "Unknown config file error\n");
-      return 2;
+      Device *newDevice = new Device;
+      newDevice->import_chunk(file[i]);
+      device_list.push_back(newDevice);
+      printf("Loaded %d commands for device '%s'\n", newDevice->nb_command, newDevice->name.c_str());
     }
 
     printf("Starting scan for devices\n");
@@ -68,6 +61,16 @@ int main(int argc, char* argv[])
       delete it;
     }
 
+  }
+  catch (file_format_error& e)
+  {
+    printErrorIndex(e.data(), e.where(), e.what(), e.origin());
+    return 11;
+  }
+  catch (chunk_format_error& e)
+  {
+    std::cerr << "Chunk Error: " << e.what() << std::endl ;
+    return 11;
   }
   catch (std::exception& e)
   {

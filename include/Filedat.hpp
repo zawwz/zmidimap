@@ -1,15 +1,46 @@
 #ifndef FILEDAT_H
 #define FILEDAT_H
 
-#include "stringTools.hpp"
-
 #include <string>
 #include <vector>
 #include <map>
 #include <iostream>
 #include <fstream>
 
-//TESTS NEEDED
+#include <cstring>
+
+class file_format_error : public std::exception
+{
+public:
+  file_format_error(const std::string& what, const std::string& origin, const char* data, int where)  { desc=what; index=where; filename=origin; cdat=data; }
+
+  const char * what () const throw () {return desc.c_str();}
+  const int where () const throw () {return index;}
+  const char * data() const throw () {return cdat;}
+  const char * origin() const throw () {return filename.c_str();}
+private:
+  std::string desc;
+  int index;
+  std::string filename;
+  const char* cdat;
+};
+
+class chunk_format_error : public std::exception
+{
+public:
+  chunk_format_error(std::string const& what, int where)  { desc=what; index=where; }
+
+  const char * what () const throw () {return desc.c_str();}
+  const int where () const throw () {return index;}
+private:
+  std::string desc;
+  int index;
+};
+
+void printFileException(file_format_error& exc);
+void printErrorIndex(const char* in, const int index, const std::string& message, const std::string& origin);
+
+class Filedat;
 
 class AbstractChunk
 {
@@ -28,20 +59,30 @@ protected:
 class Chunk
 {
 public:
-  Chunk() { m_achunk=nullptr; }
-  Chunk(char* const in) { m_achunk=nullptr; set(std::string(in)); }
-  Chunk(std::string const& in) { m_achunk=nullptr; set(in); }
-  Chunk(Chunk const& in) { m_achunk=nullptr; set(in); }
+  Chunk(const char* in, const int in_size,  int offset=0, Filedat* data=nullptr)
+    { m_achunk=nullptr; set(in, in_size, offset, data);}
+  Chunk(std::string const& in,              int offset=0, Filedat* data=nullptr)
+    { m_achunk=nullptr; set(in, offset, data);}
+
+  Chunk(Chunk const& in) { m_achunk=nullptr; set(in);}
+
   void clear() { if(m_achunk!=nullptr) delete m_achunk; m_achunk=nullptr; }
   ~Chunk() { clear(); }
 
-  void set(std::string const& in);
-  void set(Chunk const& in); //TO OPTIMIZE
+  Filedat* parent() const { return m_parent; }
+  int offset() const { return m_offset; }
+
+
+  void set(const char* in, const int in_size, int offset=0, Filedat* data=nullptr);
+  void set(std::string const& in, int offset=0, Filedat* data=nullptr) { this->set(in.c_str(), in.size(), offset, data); }
+
+  void set(Chunk const& in) { this->set(in.strval(), in.offset(), in.parent()); } // TODO
+
   std::string strval(unsigned int alignment=0, std::string const& aligner="\t") const;
+
 
   // bool concatenate(Chunk const& chk); //concatenates chunks
   bool addToChunk(std::string const& name, Chunk const& val); //adds if datachunk
-  inline bool addToChunk(std::pair<std::string, Chunk> const& pair) { return add(pair.first, pair.second); } //adds if datachunk
   bool addToChunk(std::vector<std::pair<std::string, Chunk>> const& vec); //adds if datachunk
   bool addToList(Chunk const& val); //adds if list
   bool addToList(std::vector<Chunk> const& vec); //adds if list
@@ -66,15 +107,19 @@ public:
   Chunk& operator[](std::string const& a) const { return subChunkRef(a); }
   Chunk& operator[](unsigned int a) const { return subChunkRef(a); }
   Chunk& operator=(Chunk const& a) { set(a); return *this; }
-  inline bool operator+=(std::pair<std::string, Chunk> const& a) { return addToChunk(a); }
-  inline bool operator+=(std::vector<std::pair<std::string, Chunk>> const& a) { return addToChunk(a); }
-  inline bool operator+=(Chunk const& a) { return addToList(a); }
-  inline bool operator+=(std::vector<Chunk> const& a) { return addToList(a); }
+  inline bool operator+=(std::pair<std::string, Chunk> const& a) { return add(a); }
+  inline bool operator+=(std::vector<std::pair<std::string, Chunk>> const& a) { return add(a); }
+  inline bool operator+=(Chunk const& a) { return add(a); }
+  inline bool operator+=(std::vector<Chunk> const& a) { return add(a); }
   // inline bool operator*=(Chunk const& a) { concatenate(a); }
 
   //add operator+ and operator*
 
+
 protected:
+  Filedat* m_parent;
+  int m_offset;
+
   AbstractChunk* m_achunk;
 };
 
@@ -117,24 +162,37 @@ public:
 
   bool readTest() const;
 
-  bool importFile();
+  void importFile();
   bool exportFile(std::string const& path="", std::string const& aligner="\t") const;
 
   void clear();
 
-  std::string filePath() const { return m_filePath; }
-  void setFilePath(std::string const& in) { m_filePath=in; }
+  inline std::string filePath() const { return m_filePath; }
+  inline void setFilePath(std::string const& in) { m_filePath=in; }
 
-  std::string strval() const;
+  std::string strval(std::string const& aligner="\t") const;
 
-  inline Chunk* pchunk() const { return m_dataChunk; }
-  inline Chunk& chunk() const { return *m_dataChunk; }
+  Chunk* pchunk() const { return m_dataChunk; }
+  Chunk& chunk() const { return *m_dataChunk; }
 
   inline Chunk* pdata() const { return m_dataChunk; }
   inline Chunk& data() const { return *m_dataChunk; }
 
+  inline const std::string& stringdata() const { return m_data; }
+  inline const char* c_data() const { return m_data.c_str(); }
+
+  Chunk& operator[](const std::string& index)
+  {
+    return m_dataChunk->subChunkRef(index);
+  }
+  Chunk& operator[](const int index)
+  {
+    return m_dataChunk->subChunkRef(index);
+  }
+
 private:
   std::string m_filePath;
+  std::string m_data;
   Chunk* m_dataChunk;
 };
 
