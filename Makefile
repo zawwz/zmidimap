@@ -36,5 +36,5 @@ clean:
 clear:
 	rm $(BINDIR)/$(NAME)
 
-install:
-	mv $(BINDIR)/$(NAME) /usr/bin
+install: $(BINDIR)/$(NAME)
+	mv $(BINDIR)/$(NAME) /usr/local/bin
