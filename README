@@ -10,7 +10,6 @@ This program is in early stage but is fully functional without any major errors
 
 Known issues:
 - Doesn't support multiple identical devices
-- Error reporting on wrong config is sub-par
 
 
 See 'example.mim' for an example config file

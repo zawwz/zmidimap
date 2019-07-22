@@ -1,7 +1,5 @@
 #include "device.hpp"
 
-#include "stringTools.hpp"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -16,6 +14,11 @@ std::vector<Device*> device_list;
 static void sh(std::string const& string)
 {
   system(string.c_str());
+}
+
+static bool _isNum(char a)
+{
+  return (a>='0' && a<='9');
 }
 
 Device::Device()
@@ -312,7 +315,7 @@ void Device::run_signal(char* buff)
           pos++;
         pos++;
         t=1;
-        while ( isNum(*(pos+t)) )
+        while ( _isNum(*(pos+t)) )
           t++;
         ctid = std::stoi( std::string(pos, t) );
         pos+=t+2;
@@ -325,7 +328,7 @@ void Device::run_signal(char* buff)
           pos++;
         pos++;
         t=1;
-        while ( isNum(*(pos+t)) )
+        while ( _isNum(*(pos+t)) )
           t++;
         value = std::stoi( std::string(pos, t));
       }
