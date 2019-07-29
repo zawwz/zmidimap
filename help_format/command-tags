@@ -1,0 +1,57 @@
+-- [COMMAND TAGS] --
+
+[Global tags]
+  type=<type>
+  shell=<shell command>
+--
+  *type: type of the signal: note/controller/pitch/system/connect/disconnect
+    > mandatory
+  *shell: shell command to be executed
+    > mandatory
+
+[Note tags]
+  id=<interval>
+  channel=<x/*>
+  trigger=<interval>
+--
+  *id: note id from 0 to 127
+    > optional, default 0:127
+  *channel: value from 0 to 16 for channel, * for any channel
+    > optional, default *
+  *trigger: note velocity from 0 to 127 that triggers the command
+    > optional, default 1:127
+
+[Controller tags]
+  id=<interval>
+  channel=<x/*>
+  range=<interval>
+  remap=<interval>
+  float=<true/false>
+--
+  *id: controller id from 0 to 127
+    > optional, default 0:127
+  *channel: value from 0 to 16 for channel, * for any channel
+    > optional, default *
+  *range: controller value from 0 to 127 that triggers command
+    > optional, default 0:127
+  *remap: remaps the range to given interval
+    > optional, default same as range
+  *float: boolean value defining if output is a floating point value
+    > optional, default false
+
+[Pitch bend tags]
+  range=<interval>
+  remap=<interval>
+  float=<true/false>
+--
+  *range: controller value from -8192 to 8191 that triggers command
+    > optional, default -8192:8191
+  *remap: remaps the range to given interval
+    > optional, default same as range
+  *float: boolean value defining if output is a floating point value
+    > optional, default false
+
+[Interval Format]
+  x:y   range from x to y
+  x     single value x
+  *     all possible values

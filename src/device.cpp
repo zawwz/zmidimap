@@ -6,25 +6,23 @@
 
 #include <iostream>
 
-#define KILL_COMMAND_FH "kill -s INT $(ps -f | grep \"aseqdump -p "
-#define KILL_COMMAND_SH "\" | grep -v grep | awk '{print $2}' | head -n1)"
-
 std::vector<Device*> device_list;
-
-static void sh(std::string const& string)
-{
-  system(string.c_str());
-}
 
 static bool _isNum(char a)
 {
   return (a>='0' && a<='9');
 }
 
+void sh(std::string const& string)
+{
+  system(string.c_str());
+}
+
 Device::Device()
 {
   busy=false;
   nb_command=0;
+  client_id=-1;
 }
 
 Device::~Device()
@@ -247,9 +245,10 @@ void Device::run_signal(char* buff)
 {
   if ( (strstr(buff, "Port unsubscribed") != NULL) ) // distonnected
   {
-    std::string kill_command=KILL_COMMAND_FH + this->name + KILL_COMMAND_SH;
+    std::string kill_command=KILL_COMMAND_FH + std::to_string(this->client_id) + KILL_COMMAND_SH;
     system(kill_command.c_str()); // kill the process
     this->busy=false;
+    this->client_id=-1;
   }
 
   else if (index(buff, ':') != NULL) // MIDI command
@@ -391,7 +390,7 @@ void Device::run_signal(char* buff)
               result=(value-it.min)*(it.mapMax-it.mapMin)/(it.max-it.min)+it.mapMin;
 
             //command execution
-            std::string command=";channel=" + std::to_string(channel)
+            std::string command="channel=" + std::to_string(channel)
             + ";rawvalue=" + std::to_string(value)
             + ";value=";
             if(it.floating)
@@ -412,7 +411,7 @@ void Device::run_signal(char* buff)
 
 void Device::loop(Device* dev)
 {
-  std::string command = "aseqdump -p '" + dev->name + '\'';
+  std::string command = "aseqdump -p '" + std::to_string(dev->client_id) + '\'';
   FILE *stream = popen(command.c_str(), "r");
   char* buff = NULL;
   size_t buff_size = 0;

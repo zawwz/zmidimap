@@ -1,0 +1,23 @@
+-- [SHELL FORMAT] --
+
+Shell command follows regular shell format
+
+-- [Environment] --
+
+[Note]
+  $id: id of the note
+  $channel: channel of the note
+  $velocity: velocity of the note
+
+[Controller]
+  $value: value of the controller (remapped)
+  $id: id of the controller
+  $channel: channel of the controller
+  $rawvalue: original value of the controller
+
+[Pitch]
+  $value: value of the bend (remapped)
+  $rawvalue: original value of the bend
+
+[System]
+  $code: hexadecimal code of the system signal

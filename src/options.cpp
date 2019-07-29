@@ -24,16 +24,18 @@ Option::~Option()
 {
 }
 
-Option::Option(char c, bool arg)
+Option::Option(char c, bool arg, std::string helptext, std::string argname)
 {
   shortDef=true;
   longDef=false;
   takesArgument=arg;
   activated=false;
   charName=c;
+  arg_name=argname;
+  help_text=helptext;
 }
 
-Option::Option(std::string const& str, bool arg)
+Option::Option(std::string const& str, bool arg, std::string helptext, std::string argname)
 {
   shortDef=false;
   longDef=true;
@@ -41,8 +43,10 @@ Option::Option(std::string const& str, bool arg)
   activated=false;
   charName=0;
   strName=str;
+  arg_name=argname;
+  help_text=helptext;
 }
-Option::Option(char c, std::string const& str, bool arg)
+Option::Option(char c, std::string const& str, bool arg, std::string helptext, std::string argname)
 {
   shortDef=true;
   longDef=true;
@@ -50,6 +54,47 @@ Option::Option(char c, std::string const& str, bool arg)
   activated=false;
   charName=c;
   strName=str;
+  arg_name=argname;
+  help_text=helptext;
+}
+
+void Option::printHelp(int leftpad, int rightpad)
+{
+  //prepadding
+  printf("%*s", -1*leftpad, "");
+
+  //short def
+  if(this->shortDef)
+  {
+    printf("-%c ", this->charName);
+    rightpad -= 3;
+  }
+
+  //longdef
+  if(this->longDef)
+  {
+    printf("--%s ", this->strName.c_str());
+    rightpad -= 3 + this->strName.size();
+  }
+
+  //argument
+  if(this->takesArgument)
+  {
+    printf(" <%s>", arg_name.c_str());
+    rightpad -= arg_name.size() + 3;
+  }
+
+  printf("%*s%s", -1*rightpad, "", help_text.c_str());
+
+  printf("\n");
+}
+
+void OptionSet::printHelp(int leftpad, int rightpad)
+{
+  for(auto it : this->m_options)
+  {
+    it.printHelp(leftpad,rightpad);
+  }
 }
 
 OptionSet::OptionSet()
@@ -101,9 +146,9 @@ std::pair<std::vector<std::string>, bool> OptionSet::getOptions(std::vector<std:
           }
           if(popt->takesArgument)
           {
-            if( ++it == input.end() ) //se termine ici
+            if( ++it == input.end() ) //finishes here
             {
-              (*errStream) << "No argument given to option " << popt->strName << std::endl;
+              (*errStream) << "No argument given to option --" << popt->strName << std::endl;
               return std::make_pair(out, false);
             }
             popt->activated = true;
@@ -138,17 +183,17 @@ std::pair<std::vector<std::string>, bool> OptionSet::getOptions(std::vector<std:
         while( !tstop && it!=input.end() && (*it).size()>i )
         {
           popt=this->findOption((*it)[i]);
-          if(popt==nullptr) //non trouvé: erreur
+          if(popt==nullptr) //not found: error
           {
-            (*errStream) << "Unknown option: " << (*it)[i] << std::endl;
+            (*errStream) << "Unknown option: -" << (*it)[i] << std::endl;
             return std::make_pair(out, false);
           }
-          if(popt->takesArgument) //prends un argument
+          if(popt->takesArgument) //no argument
           {
             i++;
-            if((*it).size()<=i) //se termine ici
+            if((*it).size()<=i) //finishes here
             {
-              if( ++it == input.end() ) //se termine ici
+              if( ++it == input.end() )
               {
                 (*errStream) << "No argument given to option -" << popt->charName << std::endl;
                 return std::make_pair(out, false);
@@ -170,7 +215,7 @@ std::pair<std::vector<std::string>, bool> OptionSet::getOptions(std::vector<std:
               tstop=true;
             }
           }
-          else // ne prends pas d'argument
+          else //no argument
           {
             popt->activated = true;
           }

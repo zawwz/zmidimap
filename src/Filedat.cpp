@@ -18,57 +18,72 @@ std::string _repeatString(const std::string& str, const unsigned int n)
   return ret;
 }
 
-void printFileException(file_format_error& exc)
-{
-  printErrorIndex(exc.data(), exc.where(), exc.what(), exc.origin());
-}
 
 void printErrorIndex(const char* in, const int index, const std::string& message, const std::string& origin)
 {
   int i=0, j=0; // j: last newline
   int line=1; //n: line #
   int in_size=strlen(in);
-  while(i < in_size && i < index)
+  if(index >= 0)
   {
-    if(in[i] == '\n')
+    while(i < in_size && i < index)
     {
-      line++;
-      j=i+1;
+      if(in[i] == '\n')
+      {
+        line++;
+        j=i+1;
+      }
+      i++;
     }
-    i++;
+    while(i < in_size && in[i]!='\n')
+    {
+      i++;
+    }
   }
-  while(i < in_size && in[i]!='\n')
+  if(origin != "")
   {
-    i++;
+    std::cerr << origin << ": Error\nLine " << line << " col " << index-j+1 << ": " << message << std::endl;
+    std::cerr << std::string(in+j, i-j) << std::endl;
+    std::cerr << _repeatString(" ", index-j) << '^' << std::endl;
   }
-  std::cerr << origin << ": Error\nLine " << line << " col " << index-j << ": " << message << std::endl;
-  std::cerr << std::string(in+j, i-j) << std::endl;
-  std::cerr << _repeatString(" ", index-j) << '^' << std::endl;
+  else
+  {
+    std::cerr << "Format Error: " << message << std::endl;
+    if(index >= 0)
+    {
+      std::cerr << std::string(in, i) << std::endl;
+      std::cerr << _repeatString(" ", index-j) << '^' << std::endl;
+    }
+    else
+      std::cerr << in << std::endl;
+  }
 }
 
 
 Filedat::Filedat()
 {
-  m_dataChunk = nullptr;
+  m_dataChunk = new Chunk();
 }
 
 Filedat::Filedat(std::string const& in)
 {
-  m_dataChunk = nullptr;
+  m_dataChunk = new Chunk();
   m_filePath=in;
 }
 
 Filedat::~Filedat()
 {
-  this->clear();
+  if(m_dataChunk!=nullptr)
+    delete m_dataChunk;
 }
 
 void Filedat::clear()
 {
+  m_data="";
   if(m_dataChunk!=nullptr)
   {
     delete m_dataChunk;
-    m_dataChunk = nullptr;
+    m_dataChunk = new Chunk();
   }
 }
 
@@ -81,35 +96,47 @@ bool Filedat::readTest() const
     return true;
 }
 
-void Filedat::importFile()
+void Filedat::import_file(const std::string& path)
 {
-  std::ifstream stream(m_filePath);
-  if(!stream)
-  {
-    throw std::runtime_error("Cannot open file '" + m_filePath + '\'');
-  }
-
-  m_data="";
-  std::string line;
-
-  while(stream)
-  {
-    getline(stream, line);
-    m_data += (line + '\n');
-  }
+  if(path != "")
+    m_filePath=path;
+  std::ifstream st(m_filePath);
+  if(!st)
+    throw std::runtime_error("Cannot read file '" + m_filePath + '\'');
 
   this->clear();
-  try
+  std::string line;
+
+  while(st)
   {
-    m_dataChunk = new Chunk(m_data.c_str(), m_data.size(), 0, this);
+    getline(st, line);
+    m_data += (line + '\n');
   }
-  catch(chunk_format_error& e)
-  {
-    throw file_format_error(e.what(), m_filePath, m_data.c_str(), e.where());
-  }
+  this->generateChunk();
 }
 
-bool Filedat::exportFile(std::string const& path, std::string const& aligner) const
+void Filedat::import_stdin()
+{
+  m_filePath="stdin";
+  this->clear();
+  std::string line;
+  while(std::cin)
+  {
+    getline(std::cin, line);
+    m_data += (line + '\n');
+  }
+  this->generateChunk();
+}
+
+void Filedat::import_string(const std::string& data)
+{
+  this->clear();
+  m_data=data;
+  m_filePath="";
+  this->generateChunk();
+}
+
+bool Filedat::export_file(std::string const& path, std::string const& aligner) const
 {
   std::ofstream stream;
   if(path=="")
@@ -128,6 +155,20 @@ std::string Filedat::strval(std::string const& aligner) const
     return "";
   else
     return m_dataChunk->strval(0, aligner);
+}
+
+void Filedat::generateChunk()
+{
+  try
+  {
+    if(m_dataChunk != nullptr)
+      delete m_dataChunk;
+    m_dataChunk = new Chunk(m_data.c_str(), m_data.size(), 0, this);
+  }
+  catch(format_error& e)
+  {
+    throw format_error(e.what(), m_filePath, m_data, e.where());
+  }
 }
 
 std::string _getname(const char* in, const int in_size, int* start, int* val_size, int* end)
@@ -156,12 +197,10 @@ std::string _getname(const char* in, const int in_size, int* start, int* val_siz
   while(i<in_size && in[i] != '=') //skip to =
     i++;
   if(i >= in_size) //no =
-  {
-    throw chunk_format_error("Tag has no value", j);
-  }
+    throw format_error("Tag has no value", "", std::string(in, in_size), j);
 
   if(i == j) //nothing preceding =
-    throw chunk_format_error("Value has no tag", i);
+    throw format_error("Value has no tag", "", std::string(in, in_size), i);
 
   int k=i-1; //name end
   while( !_isRead(in[k]) )
@@ -190,7 +229,7 @@ std::string _getname(const char* in, const int in_size, int* start, int* val_siz
       j++;
     }
     if(i+j >= in_size) // no closing "
-      throw chunk_format_error("Double quote does not close", i-1);
+      throw format_error("Double quote does not close", "", std::string(in, in_size), i-1);
     *val_size=j;
     *end=i+j+1;
     return name;
@@ -207,7 +246,7 @@ std::string _getname(const char* in, const int in_size, int* start, int* val_siz
       j++;
     }
     if(i+j >= in_size) // no closing '
-      throw chunk_format_error("Single quote does not close", i-1);
+      throw format_error("Single quote does not close", "", std::string(in, in_size), i-1);
     *val_size=j;
     *end=i+j+1;
     return name;
@@ -231,7 +270,7 @@ std::string _getname(const char* in, const int in_size, int* start, int* val_siz
       j++;
     }
     if(i+j >= in_size) //reached end without closing
-      throw chunk_format_error("Brace does not close", i);
+      throw format_error("Brace does not close", "", std::string(in, in_size), i);
     j++;
     *val_size=j;
     *end=i+j;
@@ -256,7 +295,7 @@ std::string _getname(const char* in, const int in_size, int* start, int* val_siz
       j++;
     }
     if(i+j >= in_size) //reached end without closing
-      throw chunk_format_error("Bracket does not close", i);
+      throw format_error("Bracket does not close", "", std::string(in, in_size), i);
     j++;
     *val_size=j;
     *end=i+j;
@@ -322,7 +361,7 @@ std::string _getlist(const char* in, const int in_size, int* start, int* end)
       j++;
     }
     if(i+j >= in_size) // no closing "
-      throw chunk_format_error("Double quote does not close", i-1);
+      throw format_error("Double quote does not close", "", std::string(in, in_size), i-1);
     ret = std::string(in+i, j);
     *end=i+j+1;
   }
@@ -337,7 +376,7 @@ std::string _getlist(const char* in, const int in_size, int* start, int* end)
       j++;
     }
     if(i+j >= in_size) // no closing '
-      throw chunk_format_error("Single quote does not close", i-1);
+      throw format_error("Single quote does not close", "", std::string(in, in_size), i-1);
     ret = std::string(in+i, j);
     *end=i+j+1;
   }
@@ -359,7 +398,7 @@ std::string _getlist(const char* in, const int in_size, int* start, int* end)
       j++;
     }
     if(i+j >= in_size) //reached end without closing
-      throw chunk_format_error("Brace does not close", i);
+      throw format_error("Brace does not close", "", std::string(in, in_size), i);
     j++;
     ret = std::string(in+i, j);
     *end=i+j;
@@ -382,7 +421,7 @@ std::string _getlist(const char* in, const int in_size, int* start, int* end)
       j++;
     }
     if(i+j >= in_size) //reached end without closing
-      throw chunk_format_error("Bracket does not close", i);
+      throw format_error("Bracket does not close", "", std::string(in, in_size), i);
     j++;
     ret = std::string(in+i, j);
     *end=i+j;
@@ -419,7 +458,7 @@ std::string _getlist(const char* in, const int in_size, int* start, int* end)
     return ret;
   }
   else //Unexpected char
-    throw chunk_format_error("Expecting comma", i);
+    throw format_error("Expecting comma", "", std::string(in, in_size), i);
 
 }
 
@@ -448,7 +487,7 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
     while(!_isRead(in[val_end])) //skip unread char
       val_end--;
     if(in[val_end] != '}')
-      throw chunk_format_error("Expecting closing brace", val_end-1);
+      throw format_error("Expecting closing brace", "", std::string(in, in_size), val_end+1);
 
     DataChunk* tch = new DataChunk();
     m_achunk = tch;
@@ -461,15 +500,18 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
       int _size=0;
       int end=0;
 
+      while(!_isRead(in[i]))
+        i++;
+
       std::string newstr=std::string(in+i, val_end-i);
       try
       {
         name = _getname(newstr.c_str(), newstr.size(), &start, &_size, &end);
         val = newstr.substr(start, _size);
       }
-      catch(chunk_format_error& e)
+      catch(format_error& e)
       {
-        throw chunk_format_error(e.what(), e.where()+i);
+        throw format_error(e.what(), "", std::string(in, in_size), e.where()+i);
       }
 
       if( name == "" ) //no more values
@@ -477,11 +519,16 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
 
       try
       {
-        tch->values.insert(std::make_pair(name, new Chunk(val.c_str(),val.size(), offset + start+i, m_parent) ));
+        Chunk* chk = new Chunk(val.c_str(),val.size(), offset + start+i, m_parent);
+        if(!tch->values.insert( std::make_pair(name, chk ) ).second)
+        {
+          delete chk;
+          throw format_error("Key '" + name + "' already present", "", std::string(in, in_size), 0 - start );
+        }
       }
-      catch(chunk_format_error& e)
+      catch(format_error& e)
       {
-        throw chunk_format_error(e.what(), e.where() + start + i );
+        throw format_error(e.what(), "", std::string(in, in_size), e.where() + start + i );
       }
 
       i += end;
@@ -497,7 +544,7 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
     while(!_isRead(in[val_end])) //skip unread char
       val_end--;
     if(in[val_end] != ']')
-      throw chunk_format_error("Expecting closing bracket", val_end-1);
+      throw format_error("Expecting closing bracket", "", std::string(in, in_size), val_end+1);
 
     ChunkList* tch = new ChunkList();
     m_achunk = tch;
@@ -511,18 +558,18 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
       {
         val = _getlist(newstr.c_str(), newstr.size(), &start, &end);
       }
-      catch(chunk_format_error& e)
+      catch(format_error& e)
       {
-        throw chunk_format_error(e.what(), e.where()+i);
+        throw format_error(e.what(), "", std::string(in, in_size), e.where()+i);
       }
 
       try
       {
         tch->list.push_back(new Chunk(val.c_str(),val.size(), offset + start+i, m_parent) );
       }
-      catch(chunk_format_error& e)
+      catch(format_error& e)
       {
-        throw chunk_format_error(e.what(), e.where() + start + i );
+        throw format_error(e.what(), "", std::string(in, in_size), e.where() + start + i );
       }
 
       i+=end;
@@ -548,60 +595,59 @@ void Chunk::set(const char* in, const int in_size, int offset, Filedat* data)
   }
 }
 
-bool Chunk::addToChunk(std::string const& name, Chunk const& val)
+void Chunk::addToChunk(std::string const& name, Chunk const& val)
 {
   if(this->type()==AbstractChunk::chunk)
   {
     DataChunk* cp = dynamic_cast<DataChunk*>(m_achunk);
-    cp->values.insert(std::make_pair(name , new Chunk(val)));
-    return true;
+    Chunk* chk = new Chunk(val);
+    if( !cp->values.insert( std::make_pair(name,chk) ).second )
+    {
+      delete chk;
+      throw format_error("Key '" + name + "' already present", "", this->strval(), -1);
+    }
   }
   else if(this->type() == AbstractChunk::none)
   {
     DataChunk* cp = new DataChunk();
-    cp->values.insert(std::make_pair(name , new Chunk(val)));
     m_achunk=cp;
-    return true;
+    cp->values.insert(std::make_pair(name , new Chunk(val)));
   }
   else
-    return false;
+  {
+    throw format_error("Cannot add keys to non-map chunks", "", this->strval(), -1);
+  }
 }
 
-bool Chunk::addToChunk(std::vector<std::pair<std::string, Chunk>> const& vec)
+void Chunk::addToChunk(std::vector<std::pair<std::string, Chunk>> const& vec)
 {
-  if(this->type()!=AbstractChunk::chunk && this->type()!=AbstractChunk::none)
-    return false;
   for(auto it : vec)
-    this->add(it.first, it.second);
-  return true;
+    this->addToChunk(it.first, it.second);
 }
 
-bool Chunk::addToList(Chunk const& val)
+void Chunk::addToList(Chunk const& val)
 {
   if(this->type()==AbstractChunk::list)
   {
     ChunkList* lp = dynamic_cast<ChunkList*>(m_achunk);
     lp->list.push_back(new Chunk(val));
-    return true;
   }
   else if(this->type() == AbstractChunk::none)
   {
     ChunkList* lp = new ChunkList();
-    lp->list.push_back(new Chunk(val));
     m_achunk=lp;
-    return true;
+    lp->list.push_back(new Chunk(val));
   }
   else
-    return false;
+  {
+    throw format_error("Cannot add elements to non-list chunks", "", this->strval(), -1);
+  }
 }
 
-bool Chunk::addToList(std::vector<Chunk> const& vec)
+void Chunk::addToList(std::vector<Chunk> const& vec)
 {
-  if(this->type()!=AbstractChunk::chunk && this->type()!=AbstractChunk::none)
-    return false;
   for(auto it : vec)
-    this->add(it);
-  return true;
+    this->addToList(it);
 }
 
 std::string Chunk::strval(unsigned int alignment, std::string const& aligner) const
@@ -693,11 +739,11 @@ Chunk& Chunk::subChunkRef(std::string const& in) const
   {
     if(m_parent != nullptr)
     {
-      throw file_format_error("Element isn't a {}", m_parent->filePath(), m_parent->c_data(), m_offset );
+      throw format_error("Chunk isn't a map", m_parent->filePath(), m_parent->stringdata(), m_offset );
     }
     else
     {
-      throw chunk_format_error("Chunk isn't a {}", m_offset);
+      throw format_error("Chunk isn't a map", "", this->strval(), -1);
     }
   }
   DataChunk* dc = dynamic_cast<DataChunk*>(m_achunk);
@@ -706,11 +752,11 @@ Chunk& Chunk::subChunkRef(std::string const& in) const
   {
     if(m_parent != nullptr)
     {
-      throw file_format_error("Chunk doesn't have '" + in + "' flag", m_parent->filePath(), m_parent->c_data(), m_offset );
+      throw format_error("Map doesn't have '" + in + "' flag", m_parent->filePath(), m_parent->stringdata(), m_offset );
     }
     else
     {
-      throw chunk_format_error("Chunk doesn't have '" + in + "' flag", m_offset );
+      throw format_error("Map doesn't have '" + in + "' flag", "", this->strval(), -1);
     }
   }
   return *fi->second;
@@ -722,11 +768,11 @@ Chunk& Chunk::subChunkRef(unsigned int a) const
   {
     if(m_parent != nullptr)
     {
-      throw file_format_error("Element isn't a {}", m_parent->filePath(), m_parent->c_data(), m_offset );
+      throw format_error("Chunk isn't a list", m_parent->filePath(), m_parent->stringdata(), m_offset );
     }
     else
     {
-      throw chunk_format_error("Chunk isn't a {}", m_offset);
+      throw format_error("Chunk isn't a list", "", this->strval(), -1);
     }
   }
   ChunkList* cl = dynamic_cast<ChunkList*>(m_achunk);
@@ -734,11 +780,11 @@ Chunk& Chunk::subChunkRef(unsigned int a) const
   {
     if(m_parent != nullptr)
     {
-      throw file_format_error("List size is below " + std::to_string(a), m_parent->filePath(), m_parent->c_data(), m_offset );
+      throw format_error("List size is below " + std::to_string(a), m_parent->filePath(), m_parent->stringdata(), m_offset );
     }
     else
     {
-      throw chunk_format_error("List size is below " + std::to_string(a), m_offset );
+      throw format_error("List size is below " + std::to_string(a), "", this->strval(), -1);
     }
   }
   return *cl->list[a];

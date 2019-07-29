@@ -9,28 +9,50 @@
 #include <string>
 #include <vector>
 
-#define ANNOUNCE_COMMAND "aseqdump -p System:1"
-#define LIST_COMMAND "aseqdump -l | tail -n +2 | cut -c10- | tr -s ' '"
-
 void device_check()
 {
   char* buff = NULL;
   size_t buff_size = 0;
-  FILE *stream = popen(LIST_COMMAND, "r");
+  FILE *stream = popen(LIST_EXTENDED_COMMAND, "r");
   std::string str;
+  std::vector<std::pair<int,std::string>> ls_device;
 
   getline(&buff, &buff_size, stream); //discard the first line
+  int i=0,j=0;
+  int t;
   while ( getline(&buff, &buff_size, stream) > 0 ) //retrieve device lines
   {
-    str += buff;
+    //port id get
+    i=0;
+    while(buff[i] == ' ')
+      i++;
+    j=i;
+    while(buff[i] != ':')
+      i++;
+    t=stoi( std::string(buff+j, i-j) );
+    //name get
+    j=9;
+    i=10;
+    while(buff[i+1] != '\n')
+      i++;
+    while(buff[i-1] == ' ')
+      i--;
+
+    ls_device.push_back(std::make_pair(t, std::string(buff+j, i-j)));
   }
 
-  for ( auto it : device_list ) // iterate devices
+  for ( auto dev : device_list ) // iterate devices
   {
-    if( !it->busy && str.find(it->name) != std::string::npos ) //device detected
+    for ( auto ls = ls_device.begin() ; ls != ls_device.end() ; ls++ )
     {
-      printf("Device '%s' found\n", it->name.c_str());
-      it->start_loop();
+      if( !dev->busy && dev->name == ls->second && ls->first > 0) //device detected
+      {
+        dev->client_id = ls->first;
+        printf("Device '%s' found\n", dev->name.c_str());
+        dev->start_loop();
+      }
+      if( dev->busy && dev->client_id == ls->first )
+        ls->first = -1;
     }
   }
 

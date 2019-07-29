@@ -6,8 +6,12 @@
 #include <thread>
 
 #include "command.hpp"
-
 #include "Filedat.hpp"
+
+#define KILL_COMMAND_FH "kill -s INT $(pgrep -f \"aseqdump -p "
+#define KILL_COMMAND_SH "\")"
+
+void sh(std::string const& string);
 
 class Device
 {
@@ -22,6 +26,7 @@ public:
   Chunk export_chunk();
 
   std::string name;
+  int client_id;
   bool busy;
 
   uint32_t nb_command;
