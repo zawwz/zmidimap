@@ -16,10 +16,13 @@ endif
 $(shell mkdir -p $(ODIR))
 $(shell mkdir -p $(BINDIR))
 
-# automatically finds .hpp
-DEPS = $(shell if [ -n "$(ld $(IDIR))" ] ; then ls $(IDIR)/*.hpp ; fi)
-# automatically finds .cpp and makes the corresponding .o rule
-OBJ = $(shell ls $(SRCDIR)/*.cpp | sed 's/.cpp/.o/g;s|$(SRCDIR)/|$(ODIR)/|g')
+# automatically finds .h and .hpp
+DEPS = $(shell if [ -n "$(ld $(IDIR))" ] ; then ls $(IDIR)/*.hpp $(IDIR)/*.h 2>/dev/null ; fi)
+# automatically finds .c and .cpp and makes the corresponding .o rule
+OBJ = $(shell ls $(SRCDIR)/*.cpp $(SRCDIR)/*.c 2>/dev/null | sed 's|\.cpp|.o|g;s|\.c|.o|g;s|$(SRCDIR)/|$(ODIR)/|g')
+
+$(ODIR)/%.o: $(SRCDIR)/%.c $(DEPS)
+	$(CC) $(CXXFLAGS) -c -o $@ $<
 
 $(ODIR)/%.o: $(SRCDIR)/%.cpp $(DEPS)
 	$(CC) $(CXXFLAGS) -c -o $@ $<
@@ -36,5 +39,5 @@ clean:
 clear:
 	rm $(BINDIR)/$(NAME)
 
-install: $(BINDIR)/$(NAME)
-	mv $(BINDIR)/$(NAME) /usr/local/bin
+obj:
+	echo $(OBJ)

@@ -9,12 +9,13 @@
 #include <string>
 #include <vector>
 
+pid_t announce_thread_pid = -1;
+
 void device_check()
 {
   char* buff = NULL;
   size_t buff_size = 0;
   FILE *stream = popen(LIST_EXTENDED_COMMAND, "r");
-  std::string str;
   std::vector<std::pair<int,std::string>> ls_device;
 
   getline(&buff, &buff_size, stream); //discard the first line
@@ -37,9 +38,10 @@ void device_check()
       i++;
     while(buff[i-1] == ' ')
       i--;
-
+    //insert element
     ls_device.push_back(std::make_pair(t, std::string(buff+j, i-j)));
   }
+  pclose(stream);
 
   for ( auto dev : device_list ) // iterate devices
   {
@@ -48,7 +50,6 @@ void device_check()
       if( !dev->busy && dev->name == ls->second && ls->first > 0) //device detected
       {
         dev->client_id = ls->first;
-        printf("Device '%s' found\n", dev->name.c_str());
         dev->start_loop();
       }
       if( dev->busy && dev->client_id == ls->first )
@@ -64,7 +65,7 @@ void announce_loop()
 {
   char* buff = NULL;
   size_t buff_size = 0;
-  FILE *stream = popen(ANNOUNCE_COMMAND,"r");
+  FILE* stream = popen2(ANNOUNCE_COMMAND, "r", &announce_thread_pid);
 
   if (stream == NULL)
   {
@@ -77,6 +78,8 @@ void announce_loop()
     if ( (strstr(buff, "Port start") != NULL) || (strstr(buff,"Port subscribed") != NULL) )
       device_check();
   }
+
+  pclose2(stream, announce_thread_pid);
 
   if(buff != NULL)
     free(buff);

@@ -8,9 +8,6 @@
 #include "command.hpp"
 #include "Filedat.hpp"
 
-#define KILL_COMMAND_FH "kill -s INT $(pgrep -f \"aseqdump -p "
-#define KILL_COMMAND_SH "\")"
-
 void sh(std::string const& string);
 
 class Device
@@ -38,6 +35,7 @@ public:
   std::vector<DisconnectCommand> disconnectCommands;
 
   std::thread thread;
+  pid_t thread_pid;
 private:
   static void loop(Device* dev);
 };

@@ -6,6 +6,9 @@
 
 #include <iostream>
 
+#include "log.hpp"
+#include "popen.h"
+
 std::vector<Device*> device_list;
 
 static bool _isNum(char a)
@@ -23,6 +26,7 @@ Device::Device()
   busy=false;
   nb_command=0;
   client_id=-1;
+  thread_pid=-1;
 }
 
 Device::~Device()
@@ -245,8 +249,7 @@ void Device::run_signal(char* buff)
 {
   if ( (strstr(buff, "Port unsubscribed") != NULL) ) // distonnected
   {
-    std::string kill_command=KILL_COMMAND_FH + std::to_string(this->client_id) + KILL_COMMAND_SH;
-    system(kill_command.c_str()); // kill the process
+    kill(this->thread_pid, SIGINT);
     this->busy=false;
     this->client_id=-1;
   }
@@ -411,10 +414,12 @@ void Device::run_signal(char* buff)
 
 void Device::loop(Device* dev)
 {
-  std::string command = "aseqdump -p '" + std::to_string(dev->client_id) + '\'';
-  FILE *stream = popen(command.c_str(), "r");
   char* buff = NULL;
   size_t buff_size = 0;
+  std::string command = "aseqdump -p '" + std::to_string(dev->client_id) + '\'';
+  FILE *stream = popen2(command.c_str(), "r", &dev->thread_pid);
+
+  log("Device '" + dev->name + "' connected\n");
 
   for( auto it : dev->connectCommands )
   {
@@ -431,8 +436,9 @@ void Device::loop(Device* dev)
     std::thread(sh, it.shell).detach();
   }
 
-  printf("Device '%s' disconnected\n", dev->name.c_str());
+  log("Device '" + dev->name + "' disconnected\n");
 
-  pclose(stream);
+  pclose2(stream, dev->thread_pid);
+  dev->thread_pid=-1;
   free(buff);
 }
