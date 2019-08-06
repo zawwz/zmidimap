@@ -39,5 +39,5 @@ clean:
 clear:
 	rm $(BINDIR)/$(NAME)
 
-obj:
-	echo $(OBJ)
+install:
+	mv $(BINDIR)/$(NAME) /usr/local/bin
