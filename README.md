@@ -14,8 +14,7 @@ Download the .deb package then run: `sudo dpkg -i zmidimap.deb ; sudo apt -f ins
 
 ### Standalone
 
-Download ``zmidimap-static.tar.gz`` for a standalone without library dependency  
-Then move the executable `zmidimap` to your PATH directory
+Download ``zmidimap-static.tar.gz`` for a standalone executable without library dependency
 
 ### From source
 
