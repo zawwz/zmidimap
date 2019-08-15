@@ -9,19 +9,18 @@ Dependencies: alsa-utils , [ztd](https://github.com/zawwz/ztd)
 ### Package
 
 #### Debian/Ubuntu
+
 Download the .deb package then run: `sudo dpkg -i zmidimap.deb ; sudo apt -f install`
 
 ### Standalone
 
-Move executable `zmidimap` to your PATH directory
+Download ``zmidimap-static.tar.gz`` for a standalone without library dependency  
+Then move the executable `zmidimap` to your PATH directory
 
 ### From source
 
-```sh
-git clone https://github.com/zawwz/zmidimap.git
-cd zmidimap
-make && sudo make install  
-```
+``make -j6`` for a shared build  
+``STATIC=true make -j6`` for a static build  
 
 ## Usage
 
