@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <signal.h>
 #include <iostream>
+#include <ztd/shell.hpp>
 
 #include "log.hpp"
-#include "popen.h"
 
 std::vector<Device*> device_list;
 
@@ -44,9 +44,9 @@ bool Device::start_loop()
   return true;
 }
 
-std::pair<int32_t,int32_t> importRange(Chunk const& ch, std::string const& tag, int32_t low, int32_t high)
+std::pair<int32_t,int32_t> importRange(ztd::chunkdat const& ch, std::string const& tag, int32_t low, int32_t high)
 {
-  Chunk* pch=ch.subChunkPtr(tag);
+  ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
     std::string str=pch->strval();
@@ -70,9 +70,9 @@ std::pair<int32_t,int32_t> importRange(Chunk const& ch, std::string const& tag, 
   return std::make_pair(low, high);
 }
 
-std::pair<float,float> importRangeFloat(Chunk const& ch, std::string const& tag, float low, float high)
+std::pair<float,float> importRangeFloat(ztd::chunkdat const& ch, std::string const& tag, float low, float high)
 {
-  Chunk* pch=ch.subChunkPtr(tag);
+  ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
     std::string str=pch->strval();
@@ -94,9 +94,9 @@ std::pair<float,float> importRangeFloat(Chunk const& ch, std::string const& tag,
   return std::make_pair(low, high);
 }
 
-bool importBool(Chunk const& ch, std::string const& tag, bool defbool)
+bool importBool(ztd::chunkdat const& ch, std::string const& tag, bool defbool)
 {
-  Chunk* pch=ch.subChunkPtr(tag);
+  ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
     std::string str=pch->strval();
@@ -108,13 +108,13 @@ bool importBool(Chunk const& ch, std::string const& tag, bool defbool)
   return defbool;
 }
 
-bool Device::import_chunk(Chunk const& ch)
+bool Device::import_chunk(ztd::chunkdat const& ch)
 {
-  Chunk& cch = ch["commands"];
+  ztd::chunkdat& cch = ch["commands"];
   this->name=ch["name"].strval();
   for(int i=0 ; i<cch.listSize() ; i++)
   {
-    Chunk& tch=cch[i];
+    ztd::chunkdat& tch=cch[i];
     std::string tstr=tch["type"].strval();
     if(tstr == "system") //type system
     {
@@ -417,7 +417,7 @@ void Device::loop(Device* dev)
   char* buff = NULL;
   size_t buff_size = 0;
   std::string command = "aseqdump -p '" + std::to_string(dev->client_id) + '\'';
-  FILE *stream = popen2(command.c_str(), "r", &dev->thread_pid);
+  FILE *stream = ztd::popen2(command.c_str(), "r", &dev->thread_pid);
 
   log("Device '" + dev->name + "' connected\n");
 
@@ -438,7 +438,7 @@ void Device::loop(Device* dev)
 
   log("Device '" + dev->name + "' disconnected\n");
 
-  pclose2(stream, dev->thread_pid);
+  ztd::pclose2(stream, dev->thread_pid);
   dev->thread_pid=-1;
   free(buff);
 }

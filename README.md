@@ -2,8 +2,7 @@
 
 Map midi signals coming from ALSA midi devices to shell commands  
 
-Soft dependencies: alsa-utils  
-Hard dependencies: aseqdump  
+Dependencies: alsa-utils , [ztd](https://github.com/zawwz/ztd)
 
 ## Installing
 

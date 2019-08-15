@@ -12,6 +12,11 @@ CXXFLAGS= -I$(IDIR) -Wall -pedantic -std=c++17
 ifeq ($(DEBUG),true)
 	CXXFLAGS += -g
 endif
+ifeq ($(STATIC),true)
+	LDFLAGS += -l:libztd.a
+else
+	LDFLAGS += -lztd
+endif
 
 $(shell mkdir -p $(ODIR))
 $(shell mkdir -p $(BINDIR))

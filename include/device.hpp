@@ -6,7 +6,7 @@
 #include <thread>
 
 #include "command.hpp"
-#include "Filedat.hpp"
+#include <ztd/filedat.hpp>
 
 void sh(std::string const& string);
 
@@ -19,8 +19,8 @@ public:
   bool start_loop();
   void run_signal(char* buff);
 
-  bool import_chunk(Chunk const& ch);
-  Chunk export_chunk();
+  bool import_chunk(ztd::chunkdat const& ch);
+  ztd::chunkdat export_chunk();
 
   std::string name;
   int client_id;

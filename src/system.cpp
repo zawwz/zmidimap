@@ -1,7 +1,5 @@
 #include "system.hpp"
 
-#include "device.hpp"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +7,11 @@
 #include <string>
 #include <vector>
 
-pid_t announce_thread_pid = 0;
+#include <ztd/shell.hpp>
+
+#include "device.hpp"
+
+int announce_thread_pid = 0;
 
 void device_check()
 {
@@ -65,7 +67,7 @@ void announce_loop()
 {
   char* buff = NULL;
   size_t buff_size = 0;
-  FILE* stream = popen2(ANNOUNCE_COMMAND, "r", &announce_thread_pid);
+  FILE* stream = ztd::popen2(ANNOUNCE_COMMAND, "r", &announce_thread_pid);
 
   if (stream == NULL)
   {
@@ -79,7 +81,7 @@ void announce_loop()
       device_check();
   }
 
-  pclose2(stream, announce_thread_pid);
+  ztd::pclose2(stream, announce_thread_pid);
 
   if(buff != NULL)
     free(buff);
