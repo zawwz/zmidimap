@@ -1,5 +1,6 @@
 #include <signal.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 
 #include "device.hpp"
@@ -48,7 +49,8 @@ void cleanup()
 
 void stop(int ret)
 {
-  kill(announce_thread_pid, SIGINT);
+  if(announce_thread_pid>0)
+    kill(announce_thread_pid, SIGINT);
   exit(ret);
 }
 
@@ -61,6 +63,10 @@ int main(int argc, char* argv[])
 {
   signal(SIGINT, inthandler);
   signal(SIGCHLD, SIG_IGN); //not expecting returns from child processes
+
+  bool piped=false;
+  if (!isatty(fileno(stdin)))
+    piped = true;
 
   options.addOption(Option('h',"help",        false, "Display this help message"));
   options.addOption(Option("file-format",     false, "Display file format help"));
@@ -85,49 +91,49 @@ int main(int argc, char* argv[])
   if( op->activated )
   {
     help();
-    return 0;
+    stop(0);
   }
   op = options.findOption("file-format");
   if( op->activated )
   {
     printf("%s\n", FILE_FORMAT);
-    return 0;
+    stop(0);
   }
   op = options.findOption("command-tags");
   if( op->activated )
   {
     printf("%s\n", COMMAND_TAGS);
-    return 0;
+    stop(0);
   }
   op = options.findOption("shell-format");
   if( op->activated )
   {
     printf("%s\n", SHELL_FORMAT);
-    return 0;
+    stop(0);
   }
   op = options.findOption('h');
   if( op->activated )
   {
     help();
-    return 0;
+    stop(0);
   }
   op = options.findOption('L');
   if( op->activated )
   {
     sh("aseqdump -l");
-    return 0;
+    stop(0);
   }
   op = options.findOption('l');
   if( op->activated )
   {
     sh(LIST_COMMAND);
-    return 0;
+    stop(0);
   }
   op = options.findOption('p');
   if( op->activated )
   {
     option_p(op->argument);
-    return 0;
+    stop(0);
   }
 
   //behavioral options
@@ -138,24 +144,36 @@ int main(int argc, char* argv[])
   }
 
   //no argument: display help
+  Filedat file;
+  bool no_arg=false;
   if (arg.size() <= 0 || arg[0] == "")
   {
-    help();
-    return 0;
+    no_arg=true;
+    if(!piped)
+    {
+      help();
+      stop(0);
+    }
+  }
+  else
+  {
+    file.setFilePath(arg[0]);
   }
 
-  Filedat file(arg[0]);
-  if (!file.readTest())
-  {
-    fprintf(stderr, "File '%s' unavailable\n", arg[0].c_str());
-    return 10;
-  }
 
   //main processing
   try
   {
-    log("Loading map file '" + arg[0] + "'\n");
-    file.import_file();
+    if(no_arg)
+    {
+      log("Loading map from stdin\n");
+      file.import_stdin();
+    }
+    else
+    {
+      log("Loading map file '" + arg[0] + "'\n");
+      file.import_file();
+    }
 
     //create commands
     for(int i=0 ; i<file.chunk().listSize() ; i++)
@@ -179,9 +197,9 @@ int main(int argc, char* argv[])
   catch (std::exception& e)
   {
     std::cerr << "Exception: " << e.what() << std::endl;
-    stop(-1);
+    stop(1);
   }
 
   cleanup();
-  return 0;
+  stop(0);
 }

@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-pid_t announce_thread_pid = -1;
+pid_t announce_thread_pid = 0;
 
 void device_check()
 {
