@@ -11,6 +11,30 @@
 
 std::vector<Device*> device_list;
 
+static std::string dequote(const std::string& in)
+{
+  std::string ret;
+  const char quote = in[0];
+  if(quote != '\'' && quote !='\"')
+    return in;
+  unsigned int i=1;
+  while(i<in.size())
+  {
+    if(in[i] == quote) {
+      break;
+    }
+    else if(i+1 < in.size() && in[i] == '\\' && in[i+1] == quote) {
+      i+=2;
+      ret += quote;
+    }
+    else{
+      ret += in[i];
+      i++;
+    }
+  }
+  return ret;
+}
+
 static bool _isNum(char a)
 {
   return (a>='0' && a<='9');
@@ -111,7 +135,7 @@ bool importBool(ztd::chunkdat const& ch, std::string const& tag, bool defbool)
 bool Device::import_chunk(ztd::chunkdat const& ch)
 {
   ztd::chunkdat& cch = ch["commands"];
-  this->name=ch["name"].strval();
+  this->name=dequote(ch["name"].strval());
   for(int i=0 ; i<cch.listSize() ; i++)
   {
     ztd::chunkdat& tch=cch[i];
@@ -270,7 +294,7 @@ void Device::run_signal(char* buff)
       for( auto it : this->sysCommands )
       {
         std::string command="code=" + strval + ";";
-        command += it.shell;
+        command += dequote(it.shell);
         std::thread(sh, command).detach();
       }
     }
@@ -347,7 +371,7 @@ void Device::run_signal(char* buff)
             std::string command="id=" + std::to_string(ctid)
             + ";channel=" + std::to_string(channel)
             + ";velocity=" + std::to_string(value) + ";";
-            command += it.shell;
+            command += dequote(it.shell);
             std::thread(sh, command).detach();
           }
         }
@@ -374,7 +398,7 @@ void Device::run_signal(char* buff)
               command += std::to_string(result);
             else
               command += std::to_string((long int) result);
-            command += ";" + it.shell;
+            command += ";" + dequote(it.shell);
             std::thread(sh, command).detach();
           }
         }
@@ -400,7 +424,7 @@ void Device::run_signal(char* buff)
               command += std::to_string(result);
             else
               command += std::to_string((long int) result);
-            command += ";" + it.shell;
+            command += ";" + dequote(it.shell);
             std::thread(sh, command).detach();
           }
         }
@@ -423,7 +447,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->connectCommands )
   {
-    std::thread(sh, it.shell).detach();
+    std::thread(sh, dequote(it.shell)).detach();
   }
 
   while (getline(&buff, &buff_size, stream) > 0)
@@ -433,7 +457,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->disconnectCommands )
   {
-    std::thread(sh, it.shell).detach();
+    std::thread(sh, dequote(it.shell)).detach();
   }
 
   log("Device '" + dev->name + "' disconnected\n");

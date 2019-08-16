@@ -8,17 +8,26 @@
 #include "log.hpp"
 #include "help.h"
 
+#include "format.hpp"
+
 #include <ztd/filedat.hpp>
 #include <ztd/options.hpp>
 #include <ztd/shell.hpp>
+
+#define VERSION_STRING "v1.2"
 
 ztd::option_set options;
 
 void help()
 {
-  printf("zmidimap [options] <midimap file>\n\nOptions:\n");
-  options.print_help(2, 25);
-  printf("\nSee --file-format --command-tags --shell-format options for details on map file format\n");
+  printf("zmidimap [options] <file>\n\nOptions:\n");
+  options.print_help(4, 25);
+  printf("\nSee --zfd-format --command-tags --shell-format options for details on map file format\n");
+}
+
+void version()
+{
+  printf("zmidimap %s\n", VERSION_STRING);
 }
 
 void option_p(const std::string& port)
@@ -67,14 +76,27 @@ int main(int argc, char* argv[])
   if (!isatty(fileno(stdin)))
     piped = true;
 
-  options.add(ztd::option('h',"help",        false, "Display this help message"));
-  options.add(ztd::option("file-format",     false, "Display file format help"));
-  options.add(ztd::option("command-tags",    false, "Display for command tag help"));
-  options.add(ztd::option("shell-format",    false, "Display for shell format help"));
-  options.add(ztd::option('l',"list",        false, "List detected devices"));
-  options.add(ztd::option('L',"full-list",   false, "Print whole device list details"));
-  options.add(ztd::option('p',"port",        true,  "Connect to device and output to console", "device"));
-  options.add(ztd::option("no-log",          false, "Disable console logging"));
+  options.add(ztd::option("\r  [Help]"));
+  options.add(ztd::option('h',"help",         false, "Display this help message"));
+  options.add(ztd::option('v',"version",      false, "Display version"));
+  options.add(ztd::option("mim-format",       false, "Display mim file format help"));
+  options.add(ztd::option("zfd-format",       false, "Display zfd file format help"));
+  options.add(ztd::option("command-tags",     false, "Display for command tag help"));
+  options.add(ztd::option("shell-format",     false, "Display for shell format help"));
+
+  options.add(ztd::option("\r  [Format]"));
+  options.add(ztd::option("no-log",           false, "Disable console logging"));
+
+  options.add(ztd::option("\r  [Devices]"));
+  options.add(ztd::option('l',"list",         false, "List detected devices"));
+  options.add(ztd::option('L',"full-list",    false, "Print whole device list details"));
+  options.add(ztd::option('p',"port",         true,  "Connect to device and output to console", "device"));
+  options.add(ztd::option("\r  [Map file]"));
+  options.add(ztd::option('o',"output",       true, "Output the resulting zfd map to file. - for stdout"));
+  options.add(ztd::option('m',"mim",          false, "Read file in mim format"));
+  options.add(ztd::option('z',"zfd",          false, "Read file in zfd format"));
+  options.add(ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"));
+  options.add(ztd::option("\rIf no file format is specified, the program will try to guess the format"));
   // options.add(ztd::option('i',"interactive", false, "Start in interactive mode"));
 
   std::vector<std::string> arg;
@@ -84,54 +106,53 @@ int main(int argc, char* argv[])
   }
   catch(ztd::option_error& err)
   {
-    printf("Option error: %s\n", err.what());
+    printf("%s\n", err.what());
     stop(1);
   }
 
-  //exit options
   ztd::option* op=nullptr;
-  op = options.find('h');
-  if( op->activated )
+  //exit options
+  if( options.find('h')->activated )
   {
     help();
     stop(0);
   }
-  op = options.find("file-format");
-  if( op->activated )
+  if( options.find('v')->activated )
   {
-    printf("%s\n", FILE_FORMAT);
+    version();
     stop(0);
   }
-  op = options.find("command-tags");
-  if( op->activated )
+  if( options.find("mim-format")->activated )
+  {
+    printf("%s\n", MIM_FORMAT);
+    stop(0);
+  }
+  if( options.find("zfd-format")->activated )
+  {
+    printf("%s\n", ZFD_FORMAT);
+    stop(0);
+  }
+  if( options.find("command-tags")->activated )
   {
     printf("%s\n", COMMAND_TAGS);
     stop(0);
   }
-  op = options.find("shell-format");
-  if( op->activated )
+  if( options.find("shell-format")->activated )
   {
     printf("%s\n", SHELL_FORMAT);
     stop(0);
   }
-  op = options.find('h');
-  if( op->activated )
-  {
-    help();
-    stop(0);
-  }
-  op = options.find('L');
-  if( op->activated )
+  if( options.find('L')->activated )
   {
     sh("aseqdump -l");
     stop(0);
   }
-  op = options.find('l');
-  if( op->activated )
+  if( options.find('l')->activated )
   {
     sh(LIST_COMMAND);
     stop(0);
   }
+
   op = options.find('p');
   if( op->activated )
   {
@@ -140,10 +161,14 @@ int main(int argc, char* argv[])
   }
 
   //behavioral options
-  op = options.find("no-log");
-  if( op->activated )
+  if( options.find("no-log")->activated )
   {
     log_on=false;
+  }
+  std::string aligner="\t";
+  if(options.find("aligner")->activated)
+  {
+    aligner=options.find("aligner")->argument;
   }
 
   //no argument: display help
@@ -175,10 +200,39 @@ int main(int argc, char* argv[])
     else
     {
       log("Loading map file '" + arg[0] + "'\n");
-      file.import_file();
+      if(options.find("zfd")->activated)
+      {
+        file.import_file();
+      }
+      else if(options.find("mim")->activated)
+      {
+        file.data() = mimtochk(file_strimport(arg[0]));
+      }
+      else
+      {
+        std::string filestr=file_strimport(arg[0]);
+        if(is_mim(filestr))
+        {
+          file.data() = mimtochk(filestr);
+        }
+        else
+        {
+          file.import_file();
+        }
+      }
     }
+    if(options.find('o')->activated)
+    {
+      if(options.find('o')->argument == "-") {
+        std::cout << file.strval(aligner) << std::endl;
+      }
+      else {
 
+      }
+      return 0;
+    }
     //create commands
+    // potential parallel improvement
     for(int i=0 ; i<file.data().listSize() ; i++)
     {
       Device *newDevice = new Device;

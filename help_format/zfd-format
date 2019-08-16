@@ -1,0 +1,28 @@
+-- [ZFD FILE FORMAT] --
+
+[<device>,<device>]
+
+-- <device> format --
+  {
+    name=<name>
+    commands=[<command>,<command>]
+  }
+--
+*name: string referring to client name of the device
+
+<command> format
+  {
+    type=<type>
+    shell=<shell command>
+    <tag>=<value>
+    <tag>=<value>
+    ...
+  }
+--
+*type: type of the signal: note/controller/pitch/system/connect/disconnect
+  > mandatory
+*shell: shell command to be executed
+  > mandatory
+
+Shell command can be concatenated with \"\" or ''
+see --command-tags for optional command tags

@@ -1,14 +1,5 @@
 -- [COMMAND TAGS] --
 
-[Global tags]
-  type=<type>
-  shell=<shell command>
---
-  *type: type of the signal: note/controller/pitch/system/connect/disconnect
-    > mandatory
-  *shell: shell command to be executed
-    > mandatory
-
 [Note tags]
   id=<interval>
   channel=<x/*>
