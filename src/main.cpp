@@ -22,7 +22,9 @@ void help()
 {
   printf("zmidimap [options] <file>\n\nOptions:\n");
   options.print_help(4, 25);
-  printf("\nSee --zfd-format --command-tags --shell-format options for details on map file format\n");
+  printf("\n");
+  printf("If piped, the map file will be read from standard input\n");
+  printf("See --mim-format --zfd-format --command-tags --shell-format options for details on map file format\n");
 }
 
 void version()
@@ -92,9 +94,9 @@ int main(int argc, char* argv[])
   options.add(ztd::option('L',"full-list",    false, "Print whole device list details"));
   options.add(ztd::option('p',"port",         true,  "Connect to device and output to console", "device"));
   options.add(ztd::option("\r  [Map file]"));
-  options.add(ztd::option('o',"output",       true, "Output the resulting zfd map to file. - for stdout"));
   options.add(ztd::option('m',"mim",          false, "Read file in mim format"));
   options.add(ztd::option('z',"zfd",          false, "Read file in zfd format"));
+  options.add(ztd::option('o',"output",       true, "Output the resulting zfd map to file. - for stdout", "file"));
   options.add(ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"));
   options.add(ztd::option("\rIf no file format is specified, the program will try to guess the format"));
   // options.add(ztd::option('i',"interactive", false, "Start in interactive mode"));
@@ -158,6 +160,11 @@ int main(int argc, char* argv[])
   {
     option_p(op->argument);
     stop(0);
+  }
+
+  if (options.find('o')->activated)
+  {
+    log_on=false;
   }
 
   //behavioral options
@@ -227,12 +234,12 @@ int main(int argc, char* argv[])
         std::cout << file.strval(aligner) << std::endl;
       }
       else {
-
+        file.setFilePath(options.find('o')->argument);
+        file.export_file();
       }
       return 0;
     }
     //create commands
-    // potential parallel improvement
     for(int i=0 ; i<file.data().listSize() ; i++)
     {
       Device *newDevice = new Device;

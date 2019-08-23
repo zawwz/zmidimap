@@ -6,6 +6,8 @@ Device <name>
     <tag>=<value>
     <tag>=<value>
     ...
+  Command <type>
+    ...
 
 Device <name>
 ...
@@ -19,4 +21,5 @@ Device <name>
   > mandatory
 
 Shell command can be concatenated with \"\" or ''
+Comments are written by starting a line with //
 see --command-tags for optional command tags
