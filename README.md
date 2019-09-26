@@ -2,7 +2,7 @@
 
 Map midi signals coming from ALSA midi devices to shell commands  
 
-Dependencies: alsa-utils , [ztd](https://github.com/zawwz/ztd)
+Dependencies: alsa-utils
 
 ## Installing
 
@@ -17,6 +17,8 @@ Download the .deb package then run: `sudo dpkg -i zmidimap.deb ; sudo apt -f ins
 Download ``zmidimap-static.tar.gz`` for a standalone executable without library dependency
 
 ### From source
+
+Depends on: [ztd](https://github.com/zawwz/ztd)
 
 ``make -j6`` for a shared build  
 ``STATIC=true make -j6`` for a static build  
