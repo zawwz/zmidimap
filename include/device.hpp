@@ -8,8 +8,6 @@
 #include "command.hpp"
 #include <ztd/filedat.hpp>
 
-void sh(std::string const& string);
-
 class Device
 {
 public:
@@ -34,12 +32,13 @@ public:
   std::vector<ConnectCommand> connectCommands;
   std::vector<DisconnectCommand> disconnectCommands;
 
-  std::thread thread;
   pid_t thread_pid;
 private:
   static void loop(Device* dev);
 };
 
 extern std::vector<Device*> device_list;
+
+void clean_devices();
 
 #endif //DEVICE_HPP

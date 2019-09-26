@@ -5,6 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <iostream>
+
 #include <ztd/shell.hpp>
 
 #include "log.hpp"
@@ -40,11 +41,6 @@ static bool _isNum(char a)
   return (a>='0' && a<='9');
 }
 
-void sh(std::string const& string)
-{
-  system(string.c_str());
-}
-
 Device::Device()
 {
   busy=false;
@@ -63,8 +59,7 @@ bool Device::start_loop()
   if(this->busy)
     return false;
   this->busy = true;
-  this->thread = std::thread(Device::loop, this);
-  this->thread.detach();
+  std::thread(Device::loop, this).detach();
   return true;
 }
 
@@ -295,7 +290,7 @@ void Device::run_signal(char* buff)
       {
         std::string command="code=" + strval + ";";
         command += dequote(it.shell);
-        std::thread(sh, command).detach();
+        std::thread(ztd::sh, command, true).detach();
       }
     }
     else
@@ -372,7 +367,7 @@ void Device::run_signal(char* buff)
             + ";channel=" + std::to_string(channel)
             + ";velocity=" + std::to_string(value) + ";";
             command += dequote(it.shell);
-            std::thread(sh, command).detach();
+            std::thread(ztd::sh, command, true).detach();
           }
         }
       }
@@ -399,7 +394,7 @@ void Device::run_signal(char* buff)
             else
               command += std::to_string((long int) result);
             command += ";" + dequote(it.shell);
-            std::thread(sh, command).detach();
+            std::thread(ztd::sh, command, true).detach();
           }
         }
       }
@@ -425,7 +420,7 @@ void Device::run_signal(char* buff)
             else
               command += std::to_string((long int) result);
             command += ";" + dequote(it.shell);
-            std::thread(sh, command).detach();
+            std::thread(ztd::sh, command, true).detach();
           }
         }
       } // if type
@@ -447,7 +442,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->connectCommands )
   {
-    std::thread(sh, dequote(it.shell)).detach();
+    std::thread(ztd::sh, dequote(it.shell), true).detach();
   }
 
   while (getline(&buff, &buff_size, stream) > 0)
@@ -457,7 +452,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->disconnectCommands )
   {
-    std::thread(sh, dequote(it.shell)).detach();
+    std::thread(ztd::sh, dequote(it.shell), true).detach();
   }
 
   log("Device '" + dev->name + "' disconnected\n");
@@ -465,4 +460,13 @@ void Device::loop(Device* dev)
   ztd::pclose2(stream, dev->thread_pid);
   dev->thread_pid=-1;
   free(buff);
+}
+
+void clean_devices()
+{
+  for(auto it : device_list)
+  {
+    delete it;
+  }
+  device_list.clear();
 }

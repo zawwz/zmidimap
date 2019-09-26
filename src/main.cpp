@@ -14,7 +14,7 @@
 #include <ztd/options.hpp>
 #include <ztd/shell.hpp>
 
-#define VERSION_STRING "v1.2"
+#define VERSION_STRING "v1.3"
 
 ztd::option_set options;
 
@@ -59,8 +59,7 @@ void cleanup()
 
 void stop(int ret)
 {
-  if(announce_thread_pid>0)
-    kill(announce_thread_pid, SIGINT);
+  kill_all();
   exit(ret);
 }
 
@@ -69,12 +68,59 @@ void inthandler(int dummy)
   stop(0);
 }
 
+void load_filedat(ztd::filedat& file, bool from_stdin, std::string const& path)
+{
+  if(from_stdin)
+  {
+    log("Loading map from stdin\n");
+    file.import_stdin();
+  }
+  else
+  {
+    file.setFilePath(path);
+    log("Loading map file '" + path + "'\n");
+    if(options.find("zfd")->activated)
+    {
+      file.import_file();
+    }
+    else if(options.find("mim")->activated)
+    {
+      file.data() = mimtochk(file_strimport(path));
+    }
+    else
+    {
+      std::string filestr=file_strimport(path);
+      if(is_mim(filestr))
+      {
+        file.data() = mimtochk(filestr);
+      }
+      else
+      {
+        file.import_file();
+      }
+    }
+  }
+}
+
+void load_commands(ztd::chunkdat const& data)
+{
+  clean_devices();
+  for(int i=0 ; i<data.listSize() ; i++)
+  {
+    Device *newDevice = new Device;
+    newDevice->import_chunk(data[i]);
+    device_list.push_back(newDevice);
+    log("Loaded "+std::to_string(newDevice->nb_command)+" commands for device '"+newDevice->name+"'\n");
+  }
+}
+
 int main(int argc, char* argv[])
 {
   signal(SIGINT, inthandler);
   signal(SIGCHLD, SIG_IGN); //not expecting returns from child processes
 
   bool piped=false;
+  bool autoreload=true;
   if (!isatty(fileno(stdin)))
     piped = true;
 
@@ -98,6 +144,7 @@ int main(int argc, char* argv[])
   options.add(ztd::option('z',"zfd",          false, "Read file in zfd format"));
   options.add(ztd::option('o',"output",       true, "Output the resulting zfd map to file. - for stdout", "file"));
   options.add(ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"));
+  options.add(ztd::option("no-reload",        false, "Disable auto reloading when file changes are detected"));
   options.add(ztd::option("\rIf no file format is specified, the program will try to guess the format"));
   // options.add(ztd::option('i',"interactive", false, "Start in interactive mode"));
 
@@ -146,12 +193,12 @@ int main(int argc, char* argv[])
   }
   if( options.find('L')->activated )
   {
-    sh("aseqdump -l");
+    ztd::sh("aseqdump -l", true);
     stop(0);
   }
   if( options.find('l')->activated )
   {
-    sh(LIST_COMMAND);
+    ztd::sh(LIST_COMMAND, true);
     stop(0);
   }
 
@@ -168,6 +215,10 @@ int main(int argc, char* argv[])
   }
 
   //behavioral options
+  if( options.find("no-reload")->activated )
+  {
+    autoreload=false;
+  }
   if( options.find("no-log")->activated )
   {
     log_on=false;
@@ -181,6 +232,7 @@ int main(int argc, char* argv[])
   //no argument: display help
   ztd::filedat file;
   bool no_arg=false;
+  std::string filepath;
   if (arg.size() <= 0 || arg[0] == "")
   {
     no_arg=true;
@@ -192,42 +244,16 @@ int main(int argc, char* argv[])
   }
   else
   {
-    file.setFilePath(arg[0]);
+    filepath=arg[0];
   }
 
 
   //main processing
   try
   {
-    if(no_arg)
-    {
-      log("Loading map from stdin\n");
-      file.import_stdin();
-    }
-    else
-    {
-      log("Loading map file '" + arg[0] + "'\n");
-      if(options.find("zfd")->activated)
-      {
-        file.import_file();
-      }
-      else if(options.find("mim")->activated)
-      {
-        file.data() = mimtochk(file_strimport(arg[0]));
-      }
-      else
-      {
-        std::string filestr=file_strimport(arg[0]);
-        if(is_mim(filestr))
-        {
-          file.data() = mimtochk(filestr);
-        }
-        else
-        {
-          file.import_file();
-        }
-      }
-    }
+    //load
+    load_filedat(file, no_arg, filepath);
+    //output
     if(options.find('o')->activated)
     {
       if(options.find('o')->argument == "-") {
@@ -240,17 +266,39 @@ int main(int argc, char* argv[])
       return 0;
     }
     //create commands
-    for(int i=0 ; i<file.data().listSize() ; i++)
-    {
-      Device *newDevice = new Device;
-      newDevice->import_chunk(file[i]);
-      device_list.push_back(newDevice);
-      log("Loaded "+std::to_string(newDevice->nb_command)+" commands for device '"+newDevice->name+"'\n");
-    }
+    load_commands(file.data());
+
+    autoreload = autoreload && !no_arg;
 
     //main loop
     log("Starting scan for devices\n");
+    if(autoreload)
+      std::thread(filetime_loop, filepath).detach();
     announce_loop();
+    ztd::chunkdat bak_data = file.data();
+    while(autoreload)
+    {
+      log("Reloading file\n");
+      try
+      {
+        load_filedat(file, false, filepath);
+        load_commands(file.data());
+        bak_data = file.data();
+      }
+      catch (ztd::format_error& e)
+      {
+        ztd::printFormatException(e);
+        log("Reloading old config\n");
+        load_commands(bak_data);
+      }
+      catch (std::exception& e)
+      {
+        std::cerr << "Exception: " << e.what() << std::endl;
+        log("Reloading old config\n");
+        load_commands(bak_data);
+      }
+      announce_loop();
+    }
   }
   catch (ztd::format_error& e)
   {

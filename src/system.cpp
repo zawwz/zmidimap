@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <signal.h>
 
 #include <string>
 #include <vector>
@@ -12,6 +16,17 @@
 #include "device.hpp"
 
 int announce_thread_pid = 0;
+
+void kill_all()
+{
+  if(announce_thread_pid>0)
+    kill(announce_thread_pid, SIGINT);
+  for(auto it : device_list)
+  {
+    if(it->thread_pid>0)
+      kill(it->thread_pid, SIGINT);
+  }
+}
 
 void device_check()
 {
@@ -85,4 +100,21 @@ void announce_loop()
 
   if(buff != NULL)
     free(buff);
+}
+
+void filetime_loop(std::string filepath)
+{
+  struct stat attrib;
+  stat(filepath.c_str(), &attrib);
+  time_t last_time=attrib.st_ctime;
+  while(true)
+  {
+    stat(filepath.c_str(), &attrib);
+    if(attrib.st_ctime > last_time)
+    {
+      kill_all();
+      last_time = attrib.st_ctime;
+    }
+    sleep(1);
+  }
 }
