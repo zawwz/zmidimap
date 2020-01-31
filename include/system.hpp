@@ -15,6 +15,6 @@ void device_check();
 
 void announce_loop();
 
-void filetime_loop(std::string filepath);
+void filetime_loop(std::string const& filepath);
 
 #endif //SYSTEM_HPP

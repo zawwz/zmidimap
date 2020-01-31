@@ -36,7 +36,7 @@ static std::string dequote(const std::string& in)
   return ret;
 }
 
-static bool _isNum(char a)
+static bool _isNum(const char& a)
 {
   return (a>='0' && a<='9');
 }
@@ -63,7 +63,7 @@ bool Device::start_loop()
   return true;
 }
 
-std::pair<int32_t,int32_t> importRange(ztd::chunkdat const& ch, std::string const& tag, int32_t low, int32_t high)
+std::pair<int32_t,int32_t> importRange(const ztd::chunkdat& ch, const std::string& tag, int32_t low, int32_t high)
 {
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
@@ -89,7 +89,7 @@ std::pair<int32_t,int32_t> importRange(ztd::chunkdat const& ch, std::string cons
   return std::make_pair(low, high);
 }
 
-std::pair<float,float> importRangeFloat(ztd::chunkdat const& ch, std::string const& tag, float low, float high)
+std::pair<float,float> importRangeFloat(const ztd::chunkdat& ch, const std::string& tag, float low, float high)
 {
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
@@ -113,7 +113,7 @@ std::pair<float,float> importRangeFloat(ztd::chunkdat const& ch, std::string con
   return std::make_pair(low, high);
 }
 
-bool importBool(ztd::chunkdat const& ch, std::string const& tag, bool defbool)
+bool importBool(const ztd::chunkdat& ch, const std::string& tag, const bool& defbool)
 {
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
@@ -127,7 +127,7 @@ bool importBool(ztd::chunkdat const& ch, std::string const& tag, bool defbool)
   return defbool;
 }
 
-bool Device::import_chunk(ztd::chunkdat const& ch)
+bool Device::import_chunk(const ztd::chunkdat& ch)
 {
   ztd::chunkdat& cch = ch["commands"];
   this->name=dequote(ch["name"].strval());
@@ -177,13 +177,11 @@ bool Device::import_chunk(ztd::chunkdat const& ch)
         uint8_t id_high=127;
         uint8_t low=1;
         uint8_t high=127;
-        std::string tt;
 
         //id
         intpair=importRange(tch, "id", id_low, id_high);
         id_low=intpair.first;
         id_high=intpair.second;
-        // id=stoi(tch["id"].strval());
 
         //trigger
         intpair = importRange(tch, "trigger", low, high);
@@ -317,7 +315,7 @@ void Device::run_signal(char* buff)
       else
       {
         // throw std::runtime_error("Unknown MIDI signal:\n" + std::string(buff));
-        printf("Unsupported signal, ignoring\n");
+        std::cerr << "Unsupported signal, ignoring\n" ;
         return;
       }
 

@@ -17,7 +17,7 @@ public:
   bool start_loop();
   void run_signal(char* buff);
 
-  bool import_chunk(ztd::chunkdat const& ch);
+  bool import_chunk(const ztd::chunkdat& ch);
   ztd::chunkdat export_chunk();
 
   std::string name;

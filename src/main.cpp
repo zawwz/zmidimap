@@ -156,6 +156,8 @@ int main(int argc, char* argv[])
   catch(ztd::option_error& err)
   {
     printf("%s\n", err.what());
+    if(err.type() == ztd::option_error::unknown_option)
+      help();
     stop(1);
   }
 
@@ -273,8 +275,8 @@ int main(int argc, char* argv[])
     //main loop
     log("Starting scan for devices\n");
     if(autoreload)
-      std::thread(filetime_loop, filepath).detach();
-    announce_loop();
+      std::thread(filetime_loop, filepath).detach(); // start the killer thread
+    announce_loop(); // loop until killed
     ztd::chunkdat bak_data = file.data();
     while(autoreload)
     {
@@ -297,7 +299,7 @@ int main(int argc, char* argv[])
         log("Reloading old config\n");
         load_commands(bak_data);
       }
-      announce_loop();
+      announce_loop(); // loop until killed
     }
   }
   catch (ztd::format_error& e)

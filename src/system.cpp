@@ -102,7 +102,7 @@ void announce_loop()
     free(buff);
 }
 
-void filetime_loop(std::string filepath)
+void filetime_loop(std::string const& filepath)
 {
   struct stat attrib;
   stat(filepath.c_str(), &attrib);
