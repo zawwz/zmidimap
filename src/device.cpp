@@ -68,7 +68,7 @@ std::pair<int32_t,int32_t> importRange(const ztd::chunkdat& ch, const std::strin
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
-    std::string str=pch->strval();
+    std::string str=*pch;
     auto tpos=str.find(':');
     if (str=="*") //whole range
     {
@@ -76,14 +76,14 @@ std::pair<int32_t,int32_t> importRange(const ztd::chunkdat& ch, const std::strin
     }
     else if(tpos == std::string::npos) //single value
     {
-      low=stoi(str);
+      low=std::stoi(str);
       high=low;
     }
     else //range
     {
-      low=stoi(str.substr(0,tpos));
+      low=std::stoi(str.substr(0,tpos));
       tpos++;
-      high=stoi(str.substr(tpos, str.size()-tpos));
+      high=std::stoi(str.substr(tpos, str.size()-tpos));
     }
   }
   return std::make_pair(low, high);
@@ -94,7 +94,7 @@ std::pair<float,float> importRangeFloat(const ztd::chunkdat& ch, const std::stri
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
-    std::string str=pch->strval();
+    std::string str=*pch;
     auto tpos=str.find(':');
     if(tpos == std::string::npos)
     {
@@ -118,7 +118,7 @@ bool importBool(const ztd::chunkdat& ch, const std::string& tag, const bool& def
   ztd::chunkdat* pch=ch.subChunkPtr(tag);
   if(pch != nullptr)
   {
-    std::string str=pch->strval();
+    std::string str=*pch;
     if( str == "true" )
       return true;
     else if( str == "false" )
@@ -130,27 +130,27 @@ bool importBool(const ztd::chunkdat& ch, const std::string& tag, const bool& def
 bool Device::import_chunk(const ztd::chunkdat& ch)
 {
   ztd::chunkdat& cch = ch["commands"];
-  this->name=dequote(ch["name"].strval());
+  this->name=dequote(ch["name"]);
   for(int i=0 ; i<cch.listSize() ; i++)
   {
     ztd::chunkdat& tch=cch[i];
-    std::string tstr=tch["type"].strval();
+    std::string tstr=tch["type"];
     if(tstr == "system") //type system
     {
       std::string shell;
-      shell=tch["shell"].strval();
+      shell=tch["shell"];
       this->sysCommands.push_back(SystemCommand(shell));
     }
     else if (tstr == "connect")
     {
       std::string shell;
-      shell=tch["shell"].strval();
+      shell=tch["shell"];
       this->connectCommands.push_back(ConnectCommand(shell));
     }
     else if (tstr == "disconnect")
     {
       std::string shell;
-      shell=tch["shell"].strval();
+      shell=tch["shell"];
       this->disconnectCommands.push_back(DisconnectCommand(shell));
     }
     else
@@ -162,13 +162,13 @@ bool Device::import_chunk(const ztd::chunkdat& ch)
       std::pair<float,float> floatpair;
 
       //channel
-      if(tch.subChunkPtr("channel") == nullptr || tch["channel"].strval()=="*")
+      if(tch.subChunkPtr("channel") == nullptr || tch["channel"] == "*")
         channel=-1;
       else
-        channel=stoi(tch["channel"].strval());
+        channel=std::stoi(tch["channel"]);
 
       //shell
-      shell=tch["shell"].strval();
+      shell=tch["shell"];
 
       //type
       if(tstr == "note") //type note
