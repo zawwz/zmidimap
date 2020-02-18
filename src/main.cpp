@@ -23,7 +23,6 @@ void help()
   printf("zmidimap [options] <file>\n\nOptions:\n");
   options.print_help(4, 25);
   printf("\n");
-  printf("If piped, the map file will be read from standard input\n");
   printf("See --mim-format --zfd-format --command-tags --shell-format options for details on map file format\n");
 }
 
@@ -119,10 +118,7 @@ int main(int argc, char* argv[])
   signal(SIGINT, inthandler);
   signal(SIGCHLD, SIG_IGN); //not expecting returns from child processes
 
-  bool piped=false;
   bool autoreload=true;
-  if (!isatty(fileno(stdin)))
-    piped = true;
 
   options.add(ztd::option("\r  [Help]"));
   options.add(ztd::option('h',"help",         false, "Display this help message"));
@@ -238,17 +234,15 @@ int main(int argc, char* argv[])
   if (arg.size() <= 0 || arg[0] == "")
   {
     no_arg=true;
-    if(!piped)
-    {
-      help();
-      stop(0);
-    }
+    help();
+    stop(0);
   }
   else
   {
     filepath=arg[0];
   }
-
+  if(filepath == "-")
+    filepath = "/dev/stdin";
 
   //main processing
   try
