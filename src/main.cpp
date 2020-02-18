@@ -14,7 +14,7 @@
 #include <ztd/options.hpp>
 #include <ztd/shell.hpp>
 
-#define VERSION_STRING "v1.3"
+#define VERSION_STRING "v1.3.1a"
 
 ztd::option_set options;
 
@@ -72,7 +72,29 @@ void load_filedat(ztd::filedat& file, bool from_stdin, std::string const& path)
   if(from_stdin)
   {
     log("Loading map from stdin\n");
-    file.import_stdin();
+    file.setFilePath(path);
+    std::string str=file_strimport(path);
+
+    if(options.find("zfd")->activated)
+    {
+      file.data() = str;
+    }
+    else if(options.find("mim")->activated)
+    {
+      file.data() = mimtochk(str);
+    }
+    else
+    {
+      if(is_mim(str))
+      {
+        file.data() = mimtochk(str);
+      }
+      else
+      {
+        file.data() = str;
+      }
+    }
+
   }
   else
   {
@@ -119,6 +141,7 @@ int main(int argc, char* argv[])
   signal(SIGCHLD, SIG_IGN); //not expecting returns from child processes
 
   bool autoreload=true;
+  bool from_stdin=false;
 
   options.add(ztd::option("\r  [Help]"));
   options.add(ztd::option('h',"help",         false, "Display this help message"));
@@ -229,11 +252,9 @@ int main(int argc, char* argv[])
 
   //no argument: display help
   ztd::filedat file;
-  bool no_arg=false;
   std::string filepath;
   if (arg.size() <= 0 || arg[0] == "")
   {
-    no_arg=true;
     help();
     stop(0);
   }
@@ -242,13 +263,16 @@ int main(int argc, char* argv[])
     filepath=arg[0];
   }
   if(filepath == "-")
+  {
     filepath = "/dev/stdin";
+    from_stdin = true;
+  }
 
   //main processing
   try
   {
     //load
-    load_filedat(file, no_arg, filepath);
+    load_filedat(file, from_stdin, filepath);
     //output
     if(options.find('o')->activated)
     {
@@ -264,8 +288,6 @@ int main(int argc, char* argv[])
     //create commands
     load_commands(file.data());
 
-    autoreload = autoreload && !no_arg;
-
     //main loop
     log("Starting scan for devices\n");
     if(autoreload)
@@ -277,7 +299,7 @@ int main(int argc, char* argv[])
       log("Reloading file\n");
       try
       {
-        load_filedat(file, false, filepath);
+        load_filedat(file, from_stdin, filepath);
         load_commands(file.data());
         bak_data = file.data();
       }
