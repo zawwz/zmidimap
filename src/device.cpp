@@ -192,7 +192,6 @@ bool Device::import_chunk(const ztd::chunkdat& ch)
         {
           this->noteCommands[i].push_back(NoteCommand(channel,low,high,shell));
         }
-        this->nb_command++;
       }
       else if(tstr == "controller") //type controller
       {
@@ -226,7 +225,6 @@ bool Device::import_chunk(const ztd::chunkdat& ch)
         {
           this->ctrlCommands[i].push_back(ControllerCommand(channel,min,max,mapMin,mapMax,floating,shell));
         }
-        this->nb_command++;
       }
       else if(tstr == "pitch") //type pitch bend
       {
@@ -250,7 +248,6 @@ bool Device::import_chunk(const ztd::chunkdat& ch)
         floating = importBool(tch, "float", floating);
 
         this->pitchCommands.push_back(PitchCommand(channel,min,max,mapMin,mapMax,floating,shell));
-        this->nb_command++;
       }
       else
       {
@@ -258,6 +255,7 @@ bool Device::import_chunk(const ztd::chunkdat& ch)
         return false;
       }
     }
+    this->nb_command++;
   }
   return true;
 }
@@ -296,7 +294,7 @@ void Device::run_signal(char* buff)
       int t;
       char type;
       int8_t channel;
-      int ctid;
+      int8_t ctid=-1;
       int16_t value;
       char* pos=NULL;
       bool note_off=false;
