@@ -20,7 +20,7 @@ Device <name>
 *shell: shell command to be executed
   > mandatory
 
-Shell command can be concatenated with \"\" or ''
+Shell commands can be concatenated with "" or ''
 Comments are written with // or # and end at end of line
 Multiple tags can be put on the same line by separating them with ;
 See --command-tags for optional command tags

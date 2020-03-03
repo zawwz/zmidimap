@@ -26,5 +26,5 @@ ZFD format: http://zawz.net/doc/ztd/zfd.html
 *shell: shell command to be executed
   > mandatory
 
-Shell command can be concatenated with \"\" or ''
+Shell commands can be concatenated with "" or ''
 see --command-tags for optional command tags

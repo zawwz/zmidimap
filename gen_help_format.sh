@@ -1,11 +1,38 @@
 FORMAT_FOLDER=help_format
 IDIR=include
 
-cp $FORMAT_FOLDER/help_template_head $IDIR/help.h
+SLASHSCRIPT='s|\\|\\\\|g;s|\"|\\\"|g'
+NEWLINESCRIPT=':a;N;$!ba;s/\n/\\n/g;'
 
-echo "#define ZFD_FORMAT \"zmidimap$(sed -n -e 'H;${x;s/\n/\\n/g;s/^,//;p;}' $FORMAT_FOLDER/zfd-format)\"" >> $IDIR/help.h
-echo "#define MIM_FORMAT \"zmidimap$(sed -n -e 'H;${x;s/\n/\\n/g;s/^,//;p;}' $FORMAT_FOLDER/mim-format)\"" >> $IDIR/help.h
-echo "#define SHELL_FORMAT \"zmidimap$(sed -n -e 'H;${x;s/\n/\\n/g;s/^,//;p;}' $FORMAT_FOLDER/shell-format)\"" >> $IDIR/help.h
-echo "#define COMMAND_TAGS \"zmidimap$(sed -n -e 'H;${x;s/\n/\\n/g;s/^,//;p;}' $FORMAT_FOLDER/command-tags)\"" >> $IDIR/help.h
+filetocstr()
+{
+  sed -e $SLASHSCRIPT "$1" | sed $NEWLINESCRIPT
+}
 
-cat $FORMAT_FOLDER/help_template_tail >> $IDIR/help.h
+gen_line()
+{
+  name="$(basename "$1")"
+  echo "#define $(echo "$name" | tr '[:lower:]' '[:upper:]') \"$(filetocstr "$1")\""
+}
+
+help_header()
+{
+  echo '#ifndef HELP_H
+#define HELP_
+'
+}
+
+help_footer()
+{
+  echo '
+#endif //HELP_H'
+}
+
+help_header > "$IDIR/help.h"
+
+for I in help_format/*
+do
+  gen_line "$I" >> "$IDIR/help.h"
+done
+
+help_footer >> "$IDIR/help.h"
