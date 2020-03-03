@@ -3,7 +3,7 @@
 
 #include <ztd/filedat.hpp>
 
-ztd::chunkdat mimtochk(const std::string& mim);
+ztd::chunkdat mimtochk(std::string mim);
 
 std::string file_strimport(const std::string& path);
 

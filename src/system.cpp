@@ -96,7 +96,9 @@ void announce_loop()
       device_check();
   }
 
-  ztd::pclose2(stream, announce_thread_pid);
+  int ret = WEXITSTATUS(ztd::pclose2(stream, announce_thread_pid));
+  if( ret != 0 )
+    throw std::runtime_error("ALSA error");
 
   if(buff != NULL)
     free(buff);

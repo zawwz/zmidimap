@@ -8,9 +8,11 @@ NAME = zmidimap
 LDFLAGS = -lpthread
 
 CC=g++
-CXXFLAGS= -I$(IDIR) -Wall -pedantic -std=c++17 -O2
+CXXFLAGS= -I$(IDIR) -Wall -pedantic -std=c++17
 ifeq ($(DEBUG),true)
 	CXXFLAGS += -g
+else
+  CXXFLAGS += -O2
 endif
 ifeq ($(STATIC),true)
 	LDFLAGS += -l:libztd.a

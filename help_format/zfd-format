@@ -1,5 +1,7 @@
 -- [ZFD FILE FORMAT] --
 
+ZFD format: http://zawz.net/doc/ztd/zfd.html
+
 [<device>,<device>]
 
 -- <device> format --

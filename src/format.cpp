@@ -71,8 +71,9 @@ ztd::chunkdat mimtochk_commands(const std::string& mim)
   return chk;
 }
 
-ztd::chunkdat mimtochk(const std::string& mim)
+ztd::chunkdat mimtochk(std::string mim)
 {
+  mim = ztd::filedat::removeComments(mim);
   ztd::chunkdat chk;
   unsigned int i=0,j=0;
   _find_next(mim,i, "Device ");
