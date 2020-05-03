@@ -286,7 +286,7 @@ void Device::run_signal(char* buff)
       {
         std::string command="code=" + strval + ";";
         command += dequote(it.shell);
-        std::thread(ztd::sh, command, true).detach();
+        std::thread(ztd::shr, command).detach();
       }
     }
     else
@@ -363,7 +363,7 @@ void Device::run_signal(char* buff)
             + ";channel=" + std::to_string(channel)
             + ";velocity=" + std::to_string(value) + ";";
             command += dequote(it.shell);
-            std::thread(ztd::sh, command, true).detach();
+            std::thread(ztd::shr, command).detach();
           }
         }
       }
@@ -390,7 +390,7 @@ void Device::run_signal(char* buff)
             else
               command += std::to_string((long int) result);
             command += ";" + dequote(it.shell);
-            std::thread(ztd::sh, command, true).detach();
+            std::thread(ztd::shr, command).detach();
           }
         }
       }
@@ -416,7 +416,7 @@ void Device::run_signal(char* buff)
             else
               command += std::to_string((long int) result);
             command += ";" + dequote(it.shell);
-            std::thread(ztd::sh, command, true).detach();
+            std::thread(ztd::shr, command).detach();
           }
         }
       } // if type
@@ -438,7 +438,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->connectCommands )
   {
-    std::thread(ztd::sh, dequote(it.shell), true).detach();
+    std::thread(ztd::shr, dequote(it.shell)).detach();
   }
 
   while (getline(&buff, &buff_size, stream) > 0)
@@ -448,7 +448,7 @@ void Device::loop(Device* dev)
 
   for( auto it : dev->disconnectCommands )
   {
-    std::thread(ztd::sh, dequote(it.shell), true).detach();
+    std::thread(ztd::shr, dequote(it.shell)).detach();
   }
 
   log("Device '" + dev->name + "' disconnected\n");

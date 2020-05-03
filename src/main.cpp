@@ -214,12 +214,12 @@ int main(int argc, char* argv[])
   }
   if( options.find('L')->activated )
   {
-    ztd::sh("aseqdump -l", true);
+    ztd::shr("aseqdump -l");
     stop(0);
   }
   if( options.find('l')->activated )
   {
-    ztd::sh(LIST_COMMAND, true);
+    ztd::shr(LIST_COMMAND);
     stop(0);
   }
 
