@@ -98,6 +98,29 @@ ztd::chunkdat mimtochk(std::string mim)
   return chk;
 }
 
+std::string chktomim(ztd::chunkdat const& chk, std::string const& aligner)
+{
+  std::string ret;
+  for(int i=0 ; i<chk.listSize() ; i++)
+  {
+    ztd::chunkdat& device=chk[i];
+    ret += "Device " + device.subChunkRef("name").str() + "\n\n";
+    for(int j=0 ; j < device["commands"].listSize() ; j++)
+    {
+      ztd::chunkdat command=device["commands"][j];
+      ret += aligner + "Command " + command["type"].str() + '\n';
+      command.erase("type");
+      for(auto it : command.getmap())
+      {
+        ret += aligner+aligner + it.first + '=' + it.second->str() + '\n';
+      }
+      ret += '\n';
+      // ret += command.str(2, aligner) + '\n';
+    }
+  }
+  return ret;
+}
+
 bool is_mim(const std::string& str)
 {
   unsigned int i=0;

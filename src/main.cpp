@@ -75,11 +75,11 @@ void load_filedat(ztd::filedat& file, bool from_stdin, std::string const& path)
     file.setFilePath(path);
     std::string str=file_strimport(path);
 
-    if(options.find("zfd")->activated)
+    if(options["zfd"])
     {
       file.data() = str;
     }
-    else if(options.find("mim")->activated)
+    else if(options["mim"])
     {
       file.data() = mimtochk(str);
     }
@@ -100,11 +100,11 @@ void load_filedat(ztd::filedat& file, bool from_stdin, std::string const& path)
   {
     file.setFilePath(path);
     log("Loading map file '" + path + "'\n");
-    if(options.find("zfd")->activated)
+    if(options["zfd"])
     {
       file.import_file();
     }
-    else if(options.find("mim")->activated)
+    else if(options["mim"])
     {
       file.data() = mimtochk(file_strimport(path));
     }
@@ -161,7 +161,8 @@ int main(int argc, char* argv[])
   options.add(ztd::option("\r  [Map file]"));
   options.add(ztd::option('m',"mim",          false, "Read file in mim format"));
   options.add(ztd::option('z',"zfd",          false, "Read file in zfd format"));
-  options.add(ztd::option('o',"output",       true, "Output the resulting zfd map to file. - for stdout", "file"));
+  options.add(ztd::option('o',"output",       true,  "Output the resulting map to file", "file"));
+  options.add(ztd::option("out-zfd",          false, "Output in zfd format"));
   options.add(ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"));
   options.add(ztd::option("no-reload",        false, "Disable auto reloading when file changes are detected"));
   options.add(ztd::option("\rIf no file format is specified, the program will try to guess the format"));
@@ -180,74 +181,72 @@ int main(int argc, char* argv[])
     stop(1);
   }
 
-  ztd::option* op=nullptr;
   //exit options
-  if( options.find('h')->activated )
+  if( options['h'] )
   {
     help();
     stop(0);
   }
-  if( options.find('v')->activated )
+  if( options['v'] )
   {
     version();
     stop(0);
   }
-  if( options.find("mim-format")->activated )
+  if( options["mim-format"] )
   {
     printf("%s\n", MIM_FORMAT);
     stop(0);
   }
-  if( options.find("zfd-format")->activated )
+  if( options["zfd-format"] )
   {
     printf("%s\n", ZFD_FORMAT);
     stop(0);
   }
-  if( options.find("command-tags")->activated )
+  if( options["command-tags"] )
   {
     printf("%s\n", COMMAND_TAGS);
     stop(0);
   }
-  if( options.find("shell-format")->activated )
+  if( options["shell-format"] )
   {
     printf("%s\n", SHELL_FORMAT);
     stop(0);
   }
-  if( options.find('L')->activated )
+  if( options['L'] )
   {
     ztd::shr("aseqdump -l");
     stop(0);
   }
-  if( options.find('l')->activated )
+  if( options['l'] )
   {
     ztd::shr(LIST_COMMAND);
     stop(0);
   }
 
-  op = options.find('p');
-  if( op->activated )
+  if( options['p'] )
   {
-    option_p(op->argument);
+    option_p(options['p']);
     stop(0);
   }
 
-  if (options.find('o')->activated)
+  if (options['o'])
   {
     log_on=false;
   }
 
   //behavioral options
-  if( options.find("no-reload")->activated )
+  if( options["no-reload"] )
   {
     autoreload=false;
   }
-  if( options.find("no-log")->activated )
+  if( options["no-log"] )
   {
     log_on=false;
   }
   std::string aligner="\t";
-  if(options.find("aligner")->activated)
+  if(options["aligner"])
   {
-    aligner=options.find("aligner")->argument;
+    aligner=options["aligner"].argument;
   }
 
   //no argument: display help
@@ -274,14 +273,24 @@ int main(int argc, char* argv[])
     //load
     load_filedat(file, from_stdin, filepath);
     //output
-    if(options.find('o')->activated)
+    if(options['o'])
     {
-      if(options.find('o')->argument == "-") {
-        std::cout << file.strval(aligner) << std::endl;
+      std::string ret;
+      if(options["out-zfd"])
+        ret=file.data().str(0, aligner);
+      else
+        ret=chktomim(file.data(), aligner);
+      if(options['o'].argument == "-") {
+        std::cout << ret << std::endl;
       }
       else {
-        file.setFilePath(options.find('o')->argument);
-        file.export_file();
+        std::ofstream output(options['o']);
+        if(!output)
+        {
+          std::cerr << "Cannot write to file '" + options['o'].argument + "'\n";
+          return 1;
+        }
+        output << ret << std::endl ;
       }
       return 0;
     }

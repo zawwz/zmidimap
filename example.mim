@@ -1,49 +1,43 @@
-
-
 Device "Launch Control"
 
   //display value 0:127 for knobs 21-28
   Command controller
     id=21:28
-    shell=echo "Knob #$id ch$channel:$value"
+    shell='echo "Knob #$id ch$channel:$value"'
 
-  //display value 0:127 for knob 41 from any channel
+  //display value -100:100 for knob 41 on channel 0
   Command controller
     id=41
-    channel=*
-    shell=echo "Knob #$id ch$channel:$value"
-
-  //display value -100:100 for knob 42 on channel 0
-  Command controller
-    id=42
     channel=0
     remap=-100:100
-    shell=echo "Knob #$id ch0:$value r:$rawvalue"
+    shell='echo "Knob #$id ch0:$value r:$rawvalue"'
 
-  //display value 0:1:0 for knob 42 on channel 1 (first half)
+  //display value 0:1:0 for knob 41 on channel 1 (first half)
   Command controller
     id=42
     channel=1
     range=0:63
     remap=0:1
     float=true
-    shell=echo "Knob #$id ch1:$value r:$rawvalue"
+    shell='echo "Knob #$id ch1:$value r:$rawvalue"'
 
-  //display value 0:1:0 for knob 42 on channel 1 (second half)
+  //display value 0:1:0 for knob 41 on channel 1 (second half)
   Command controller
     id=42
     channel=1
     range=64:127
     remap=1:0
     float=true
-    shell=echo "Knob #$id ch1:$value r:$rawvalue"
+    shell='echo "Knob #$id ch1:$value r:$rawvalue"'
 
 
 Device "Launchpad S"
 
+  //display any note pressed and its velocity
   Command note
-    shell=echo "Note $id on  velocity:$velocity"
+    shell=echo Note $id on  velocity:$velocity
 
+  //display any note off
   Command note
     trigger=0
-    shell=echo "Note $id off"
+    shell=echo Note $id off
