@@ -143,30 +143,28 @@ int main(int argc, char* argv[])
   bool autoreload=true;
   bool from_stdin=false;
 
-  options.add(ztd::option("\r  [Help]"));
-  options.add(ztd::option('h',"help",         false, "Display this help message"));
-  options.add(ztd::option('v',"version",      false, "Display version"));
-  options.add(ztd::option("mim-format",       false, "Display mim file format help"));
-  options.add(ztd::option("zfd-format",       false, "Display zfd file format help"));
-  options.add(ztd::option("command-tags",     false, "Display for command tag help"));
-  options.add(ztd::option("shell-format",     false, "Display for shell format help"));
-
-  options.add(ztd::option("\r  [Format]"));
-  options.add(ztd::option("no-log",           false, "Disable console logging"));
-
-  options.add(ztd::option("\r  [Devices]"));
-  options.add(ztd::option('l',"list",         false, "List detected devices"));
-  options.add(ztd::option('L',"full-list",    false, "Print whole device list details"));
-  options.add(ztd::option('p',"port",         true,  "Connect to device and output to console", "device"));
-  options.add(ztd::option("\r  [Map file]"));
-  options.add(ztd::option('m',"mim",          false, "Read file in mim format"));
-  options.add(ztd::option('z',"zfd",          false, "Read file in zfd format"));
-  options.add(ztd::option('o',"output",       true,  "Output the resulting map to file", "file"));
-  options.add(ztd::option("out-zfd",          false, "Output in zfd format"));
-  options.add(ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"));
-  options.add(ztd::option("no-reload",        false, "Disable auto reloading when file changes are detected"));
-  options.add(ztd::option("\rIf no file format is specified, the program will try to guess the format"));
-  // options.add(ztd::option('i',"interactive", false, "Start in interactive mode"));
+  options.add(
+    ztd::option("\r  [Help]"),
+    ztd::option('h',"help",         false, "Display this help message"),
+    ztd::option('v',"version",      false, "Display version"),
+    ztd::option("mim-format",       false, "Display mim file format help"),
+    ztd::option("zfd-format",       false, "Display zfd file format help"),
+    ztd::option("command-tags",     false, "Display for command tag help"),
+    ztd::option("shell-format",     false, "Display for shell format help"),
+    ztd::option("\r  [Format]"),
+    ztd::option("no-log",           false, "Disable console logging"),
+    ztd::option("\r  [Devices]"),
+    ztd::option('l',"list",         false, "List detected devices"),
+    ztd::option('L',"full-list",    false, "Print whole device list details"),
+    ztd::option('p',"port",         true,  "Connect to device and output to console", "device"),
+    ztd::option("\r  [Map file]"),
+    ztd::option('m',"mim",          false, "Read file in mim format"),
+    ztd::option('z',"zfd",          false, "Read file in zfd format"),
+    ztd::option('o',"output",       true,  "Output the resulting map to file", "file"),
+    ztd::option("out-zfd",          false, "Output in zfd format"),
+    ztd::option("aligner",          true,  "String to use for aligning output map format. Default \\t", "string"),
+    ztd::option("no-reload",        false, "Disable auto reloading when file changes are detected")
+  );
 
   std::vector<std::string> arg;
   try

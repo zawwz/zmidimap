@@ -96,7 +96,7 @@ void announce_loop()
       device_check();
   }
 
-  int ret = WEXITSTATUS(ztd::pclose2(stream, announce_thread_pid));
+  ztd::pclose2(stream, announce_thread_pid);
 
   if(buff != NULL)
     free(buff);
